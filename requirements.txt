@@ -1,0 +1,7 @@
+fxpmath
+matplotlib
+numpy
+PyYAML
+rawpy
+scipy
+tqdm
