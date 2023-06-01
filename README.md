@@ -4,9 +4,9 @@ Infinite-ISP is a one stop solution for all your ISP development needs - from al
 | Repository name        | Description      | 
 | -------------  | ------------- |
 | **[Infinite-ISP_AlgorithmDesign](https://github.com/xx-isp/infinite-isp)**                        | Python based model of the Infinite-ISP pipeline for algorithm development |
-| **[Infinite-ISP_ReferenceModel](https://github.com/10xEngineersTech/Infinite-ISP_ReferenceModel)**                        | Python based fixed-point model of the Infinite-ISP pipeline for hardware implementation |
-| **[Infinite-ISP_FPGABitstream](https://github.com/10xEngineersTech/Infinite-ISP_RTL)**                                      | FPGA bit-stream for the  Kria kV260’s Xilinx® ZU5EV Ultrascale FPGA|
-| **[Infinite-ISP_Firmware](https://github.com/10xEngineersTech/Infinite-ISP_RTL)**                                      | Firmware for the Kria kV260’s embedded Arm® Cortex®A53 processor|
+| **[Infinite-ISP_ReferenceModel](https://github.com/10xEngineersTech/Infinite-ISP_ReferenceModel)** :anchor:                        | Python based fixed-point model of the Infinite-ISP pipeline for hardware implementation |
+| **[Infinite-ISP_FPGABitstream](https://github.com/10xEngineersTech/Infinite-ISP_FPGABitstream)**                                      | FPGA bit-stream for the  Kria kV260’s Xilinx® ZU5EV Ultrascale FPGA|
+| **[Infinite-ISP_Firmware](https://github.com/10xEngineersTech/Infinite-ISP_Firmware)**                                      | Firmware for the Kria kV260’s embedded Arm® Cortex®A53 processor|
 | **[Infinite-ISP_Tuning Tool](https://github.com/10xEngineersTech/Infinite-ISP_TuningTool)**                              | Collection of calibration and analysis tools for the Infinite-ISP |
 
 # Infinite-ISP_ReferenceModel: A Python-based Model for RTL Implementation of Camera Pipeline Modules
@@ -52,7 +52,7 @@ The table below provides a feature list of the model. The version `1.0` of the m
 | Optical Electronic Transfer Function (OECF)   | Calibration / sensor dependent <br> - Implements a LUT from config |
 | Digital Gain                                  | Gains from config file <br>- In auto mode AE feedback is incorporated for digital gain selection|
 | Bayer Noise Reduction                         | [Green Channel Guiding Denoising by Tan et al](https://www.researchgate.net/publication/261753644_Green_Channel_Guiding_Denoising_on_Bayer_Image) <br>  - Implements Chroma and Spatial filters through LUTs |
-| Auto White Balance                            | Enhanced [Grey World](https://www.sciencedirect.com/science/article/abs/pii/0016003280900587) <br>- AWB stats calculations within an optimal threshold    |
+| Auto White Balance                            | Enhanced [Gray World](https://www.sciencedirect.com/science/article/abs/pii/0016003280900587) <br>- AWB stats calculations within an optimal threshold    |
 | White Balance                                 | WB gains multiplication <br> - Parameters from the config file tunable using the tuning tool |
 | Demosaic                         | [Malwar He Cutler’s](https://www.ipol.im/pub/art/2011/g_mhcd/article.pdf ) demosaicing algorithm  |
 | Color Correction Matrix                       | Calibration / sensor dependent <br> - 3x3 CCM from the config file tunable using the tuning tool|
