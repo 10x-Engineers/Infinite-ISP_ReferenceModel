@@ -147,7 +147,6 @@ def get_input_tv(path, input_ext, rev_flag, rgb_conv_flag):
     # check if module output is RGB or YUV
     yuv_out = [
         "color_space_conversion",
-        "ldci",
         "2d_noise_reduction",
     ]
     rgb_out = [

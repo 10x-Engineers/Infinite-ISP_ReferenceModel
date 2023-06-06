@@ -83,8 +83,8 @@ Below parameters are present each ISP pipeline module they effect the functional
 
 | digital_gain    | Details |
 | -----------     |   ---   |
-| is_enable       | This is a essential module and cannot be disabled 
-| is_auto         | Flag to calculated digital gain using AE Feedback
+| is_enable       | This is an essential module and cannot be disabled 
+| is_auto         | Flag to calculate digital gain using AE Feedback
 | gain_array      | Gains array. List of permissible digital gains |
 | current_gain    | Index for the current gain in gain_array. It starts from zero |
 | ae_feedback| AE feedback, it has only following values <br> - `1` (Overexposed)  <br> - `-1` (Underexposed)  <br> - `0` (Correct Exposure) |
@@ -106,7 +106,7 @@ Below parameters are present each ISP pipeline module they effect the functional
 | auto_white_balance      | Details |
 | -----------             |   ---   |
 | is_enable           | When enabled calculates white balance gains for current frame  |
-| stats_window_offset | Specifies the crop dimensions to obtain a stats calculation window <br> - Should be an array of elements `[Up, Down, Left Right]` <br> - Should be a multiple of 4 |
+| stats_window_offset | Specifies the crop dimensions to obtain a stats calculation window <br> - Should be an array of elements `[Up, Down, Left, Right]` <br> - Should be a multiple of 4 |
 | underexposed_percentage   | Set % of dark pixels to exclude before AWB gain calculation|
 | overexposed_percentage    | Set % of saturated pixels to exclude before AWB gain calculation|
 

@@ -37,7 +37,7 @@ ISP pipeline for `InfiniteISP_ReferenceModel v1.0`
 
 ## Objectives
 
-The primary objective of Infinite-ISP_ReferenceModel is to create a open source Python-based Model that streamlines the process of implementing camera pipeline modules into RTL-friendly implementations. This enables seamless integration with hardware designs and simplifies the development of efficient image processing systems. By providing optimized algorithms, test vector generation, output comparison, and video processing capabilities, the model aims to be an invaluable tool for developers working on image processing projects and RTL implementations.
+The primary objective of Infinite-ISP_ReferenceModel is to create a open source Python-based Model that streamlines the process of implementing camera pipeline modules into RTL-friendly implementations. This enables seamless integration with hardware designs and simplifies the development of efficient image processing systems. By providing optimized algorithms, test vector generation, and video processing capabilities, the model aims to be an invaluable tool for developers working on image processing projects and RTL implementations.
 
 # Features List
 

@@ -39,18 +39,17 @@ The DUT (Device Under Test) refers to the specific module or set of modules that
 9. color_correction_matrix
 10. gamma_correction
 11. color_space_conversion
-12. ldci 
-13. 2d_noise_reduction
-14. rgb_conversion
-15. invalid_region_crop
-16. scale
-17. yuv_conversion_format
+12. 2d_noise_reduction
+13. rgb_conversion
+14. invalid_region_crop
+15. scale
+16. yuv_conversion_format
 
 When specifying the DUT (Device Under Test), it is important to use the exact names from the provided list. The DUT can be defined in two ways:
 
 1. Single Module: The DUT can be any individual module from the list above, such as "demosaic" or "scale"
 
-2. Multiple Modules in Sequence: When testing multiple modules in sequence, it is crucial to follow the specified order. For example, "crop, ldci, scale" would be a valid sequence. However, "ldci" cannot precede the "digital_gain" in the DUT list.
+2. Multiple Modules in Sequence: When testing multiple modules in sequence, it is crucial to follow the specified order. For example, "crop, white_balance, scale" would be a valid sequence. However, "white_balance" cannot precede the "digital_gain" in the DUT list.
 
 By accurately matching the DUT name to the provided list, it is ensured that the correct modules are being tested, either individually or in the specified order, while considering any dependencies between the modules.
 
