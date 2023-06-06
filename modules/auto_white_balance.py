@@ -25,8 +25,8 @@ class AutoWhiteBalance:
         self.bit_depth = sensor_info["bit_depth"]
         self.is_debug = parm_awb["is_debug"]
         self.stats_window_offset = np.array(parm_awb["stats_window_offset"])
-        self.underexposed_percentage = parm_awb["underexposed_pecentage"]
-        self.overexposed_percentage = parm_awb["overexposed_pecentage"]
+        self.underexposed_percentage = parm_awb["underexposed_percentage"]
+        self.overexposed_percentage = parm_awb["overexposed_percentage"]
         self.flatten_raw = None
         self.bayer = self.sensor_info["bayer_pattern"]
 

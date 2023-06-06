@@ -5,7 +5,7 @@ rev_yuv: False
 # DUT options = ['crop', 'dead_pixel_correction', 'black_level_correction',
 #                'oecf', 'digital_gain','bayer_noise_reduction',
 #                'white_balance', 'demosaic', 'color_correction_matrix',
-#                'gamma_correction', 'color_space_conversion', 'ldci',
+#                'gamma_correction', 'color_space_conversion',
 #                '2d_noise_reduction', 'rgb_conversion', 'invalid_region_crop',
 #                'scale', 'yuv_conversion_format']
 dut: ["dead_pixel_correction"]
@@ -35,8 +35,6 @@ auto_exposure:
   is_enable: true
 color_space_conversion:
   is_save: false
-ldci:
-  is_enable: false
 2d_noise_reduction:
   is_enable: false
 rgb_conversion:
