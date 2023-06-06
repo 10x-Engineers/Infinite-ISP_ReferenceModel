@@ -107,8 +107,8 @@ Below parameters are present each ISP pipeline module they effect the functional
 | -----------             |   ---   |
 | is_enable           | When enabled calculates white balance gains for current frame  |
 | stats_window_offset | Specifies the crop dimensions to obtain a stats calculation window <br> - Should be an array of elements `[Up, Down, Left Right]` <br> - Should be a multiple of 4 |
-| underexposed_pecentage   | Set % of dark pixels to exclude before AWB gain calculation|
-| overexposed_pecentage    | Set % of saturated pixels to exclude before AWB gain calculation|
+| underexposed_percentage   | Set % of dark pixels to exclude before AWB gain calculation|
+| overexposed_percentage    | Set % of saturated pixels to exclude before AWB gain calculation|
 
 ### White balance
 

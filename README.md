@@ -160,9 +160,9 @@ A comparison of the above results based on PSNR and SSIM image quality metrics
 | Images    | PSNR  | SSIM  |
 |-----------|-------|-------|
 | Indoor1   |22.5788     |0.8923
-|Outdoor1   |22.3578     |0.9374
-|Outdoor2   |20.1876     |0.8189
-|Outdoor3   |19.6018     |0.7902 
+|Outdoor1   |19.1544     |0.9048
+|Outdoor2   |18.8681     |0.8071
+|Outdoor3   |17.2825     |0.7304
 |Outdoor4   |19.9814     |0.8198
 
 ## User Guide

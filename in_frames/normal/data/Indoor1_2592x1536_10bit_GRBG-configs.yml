@@ -75,8 +75,8 @@ auto_white_balance:
   is_enable: true
   is_debug: true
   stats_window_offset: [16, 16, 16, 16]
-  underexposed_pecentage: 2.5
-  overexposed_pecentage: 2.5
+  underexposed_percentage: 2.5
+  overexposed_percentage: 2.5
   is_save: false
 
 white_balance:
