@@ -17,9 +17,8 @@ The configuration file [tv_config.yml](test_vector_generation/tv_config.yml) pla
 
 | Parameters | Details                                           | 
 |--------------------|---------------------------------------------------|
-| dataset_path           | Path to the dataset <br> Testing is done on all raw images in the mentioned folder | 
-| config_path           | Path to the config file for dataset images |   
-| input_ext        | Extension for binary files produced by automated script <br> - `.raw` <br> - `.bin`  |     
+| dataset_path           | Path to the dataset <br> Testing is done on all raw images using respective config files provided in the mentioned folder | 
+| config_path           | Path to the config file for dataset images <br> This file is used only if image-specific config file is not found |    
 | dut         | Device Under Test <br> It can be single module or set of modules in sequence. Details of how to set DUT are below   |
 | is_enable         | Flag to enable non-default modules   |
 | is_save         | Flag to save the test vector for default modules   | 
@@ -74,6 +73,6 @@ The aforementioned parameters are intrinsic to the automated script, while the r
 
  1. Input-Output results (numpy-array and png-image) for each DUT.
  2. Final output of Infinite-ISP
- 3. Configuration file of Infinite-ISP
+ 3. Configuration files of Infinite-ISP
  4. Configuration file of automation script.
  5. Logs for ISP-Pipeline execution.

@@ -10,10 +10,12 @@ from infinite_isp import InfiniteISP
 
 CONFIG_PATH = "./config/configs.yml"
 RAW_DATA = "./in_frames/normal"
+FILENAME = None
 
-infinite_isp = InfiniteISP(RAW_DATA, CONFIG_PATH)
+if __name__ == "__main__":
 
-# set generate_tv flag to false
-infinite_isp.c_yaml["platform"]["generate_tv"] = False
+    infinite_isp = InfiniteISP(RAW_DATA, CONFIG_PATH)
 
-infinite_isp.execute()
+    # set generate_tv flag to false
+    infinite_isp.c_yaml["platform"]["generate_tv"] = False
+    infinite_isp.execute(img_path=FILENAME)

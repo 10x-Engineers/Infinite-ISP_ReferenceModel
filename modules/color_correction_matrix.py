@@ -7,14 +7,17 @@ Author: 10xEngineers Pvt Ltd
 """
 import time
 import numpy as np
+from util.utils import save_output_array
 
 
 class ColorCorrectionMatrix:
     "Apply the color correction 3x3 matrix"
 
-    def __init__(self, img, sensor_info, parm_ccm):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_ccm):
+        self.img = img.copy()
         self.enable = parm_ccm["is_enable"]
+        self.is_save = parm_ccm["is_save"]
+        self.platform = platform
         self.sensor_info = sensor_info
         self.parm_ccm = parm_ccm
         self.bit_depth = sensor_info["bit_depth"]
@@ -47,6 +50,19 @@ class ColorCorrectionMatrix:
         # out = np.uint16(out * (2**self.bit_depth - 1))
         return out
 
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array(
+                self.platform["in_file"],
+                self.img,
+                "Out_color_correction_matrix_",
+                self.platform,
+                self.bit_depth,
+            )
+
     def execute(self):
         """Execute ccm if enabled."""
         print("Color Correction Matrix = " + str(self.enable))
@@ -55,5 +71,7 @@ class ColorCorrectionMatrix:
             start = time.time()
             ccm_out = self.apply_ccm()
             print(f"  Execution time: {time.time() - start:.3f}s")
-            return ccm_out
+            self.img = ccm_out
+
+        self.save()
         return self.img

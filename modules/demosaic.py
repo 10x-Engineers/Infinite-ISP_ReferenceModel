@@ -8,13 +8,17 @@ Author: 10xEngineers Pvt Ltd
 import time
 import numpy as np
 from scipy.signal import correlate2d
+from util.utils import save_output_array
 
 
 class Demosaic:
     "CFA Interpolation - Demaosicing"
 
-    def __init__(self, img, sensor_info):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_dem):
+        self.img = img.copy()
+        self.is_save = parm_dem["is_save"]
+        self.platform = platform
+        self.sensor_info = sensor_info
         self.bayer = sensor_info["bayer_pattern"]
         self.bit_depth = sensor_info["bit_depth"]
 
@@ -33,7 +37,9 @@ class Demosaic:
 
         # Following comment will create boolean masks for each channel r_channel,
         # g_channel and b_channel
-        for channel, (y_channel, x_channel) in zip(pattern, [(0, 0), (0, 1), (1, 0), (1, 1)]):
+        for channel, (y_channel, x_channel) in zip(
+            pattern, [(0, 0), (0, 1), (1, 0), (1, 1)]
+        ):
             channels[channel][y_channel::2, x_channel::2] = True
 
         # tuple will return 3 channel boolean pattern for r_channel,
@@ -157,28 +163,53 @@ class Demosaic:
         # For R channel we have to update pixels at [r_channel rows
         # and b_channel cols] & at [b_channel rows and r_channel cols]
         # 3 pixels need to be updated near one given r_channel
-        r_channel = np.where(np.logical_and(r_rows == 1, b_col == 1), rb_at_g_rbbr, r_channel)
-        r_channel = np.where(np.logical_and(b_rows == 1, r_col == 1), rb_at_g_brrb, r_channel)
+        r_channel = np.where(
+            np.logical_and(r_rows == 1, b_col == 1), rb_at_g_rbbr, r_channel
+        )
+        r_channel = np.where(
+            np.logical_and(b_rows == 1, r_col == 1), rb_at_g_brrb, r_channel
+        )
 
         # Similarly for B channel we have to update pixels at
         # [r_channel rows and b_channel cols]
         # & at [b_channel rows and r_channel cols] 3 pixels need
         # to be updated near one given b_channel
-        b_channel = np.where(np.logical_and(b_rows == 1, r_col == 1), rb_at_g_rbbr, b_channel)
-        b_channel = np.where(np.logical_and(r_rows == 1, b_col == 1), rb_at_g_brrb, b_channel)
+        b_channel = np.where(
+            np.logical_and(b_rows == 1, r_col == 1), rb_at_g_rbbr, b_channel
+        )
+        b_channel = np.where(
+            np.logical_and(r_rows == 1, b_col == 1), rb_at_g_brrb, b_channel
+        )
 
         # Final r_channel & b_channel channels
-        r_channel = np.where(np.logical_and(b_rows == 1, b_col == 1), rb_at_gr_bbrr, r_channel)
-        b_channel = np.where(np.logical_and(r_rows == 1, r_col == 1), rb_at_gr_bbrr, b_channel)
+        r_channel = np.where(
+            np.logical_and(b_rows == 1, b_col == 1), rb_at_gr_bbrr, r_channel
+        )
+        b_channel = np.where(
+            np.logical_and(r_rows == 1, r_col == 1), rb_at_gr_bbrr, b_channel
+        )
 
         demos_out[:, :, 0] = r_channel
         demos_out[:, :, 1] = g_channel
         demos_out[:, :, 2] = b_channel
 
         # Clipping the pixels values within the bit range
-        demos_out = np.clip(demos_out, 0, 2 ** self.bit_depth - 1)
+        demos_out = np.clip(demos_out, 0, 2**self.bit_depth - 1)
         demos_out = np.uint16(demos_out)
         return demos_out
+
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array(
+                self.platform["in_file"],
+                self.img,
+                "Out_demosaic_",
+                self.platform,
+                self.sensor_info["bit_depth"],
+            )
 
     def execute(self):
         """
@@ -187,5 +218,7 @@ class Demosaic:
         print("CFA interpolation (default) = True")
         start = time.time()
         cfa_out = self.apply_cfa()
-        print(f'  Execution time: {time.time() - start:.3f}s')
-        return cfa_out
+        print(f"  Execution time: {time.time() - start:.3f}s")
+        self.img = cfa_out
+        self.save()
+        return self.img

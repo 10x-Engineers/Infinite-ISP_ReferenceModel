@@ -7,30 +7,22 @@ Author: 10xEngineers Pvt Ltd
 ------------------------------------------------------------
 """
 import time
+import re
 import numpy as np
-from util.utils import crop, stride_convolve2d
+from util.utils import crop, stride_convolve2d, save_output_array, save_output_array_yuv
 
 
 class Scale:
     """Scale color image to given size."""
 
-    def __init__(self, img, sensor_info, parm_sca):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_sca):
+        self.img = img.copy()
         self.enable = parm_sca["is_enable"]
+        self.is_save = parm_sca["is_save"]
         self.sensor_info = sensor_info
+        self.platform = platform
         self.parm_sca = parm_sca
         self.get_scaling_params()
-
-    def execute(self):
-        """Execute scaling if enabled."""
-        print("Scale = " + str(self.enable))
-
-        if self.enable:
-            start = time.time()
-            scaled_img = self.apply_scaling()
-            print(f"  Execution time: {time.time() - start:.3f}s")
-            return scaled_img
-        return self.img
 
     def apply_scaling(self):
         """Execute scaling."""
@@ -70,6 +62,45 @@ class Scale:
         self.is_debug = self.parm_sca["is_debug"]
         self.old_size = (self.img.shape[0], self.img.shape[1])
         self.new_size = (self.parm_sca["new_height"], self.parm_sca["new_width"])
+
+    def save(self):
+        """
+        Function to save module output
+        """
+        # update size of array in filename
+        self.platform["in_file"] = re.sub(
+            r"\d+x\d+",
+            f"{self.img.shape[1]}x{self.img.shape[0]}",
+            self.platform["in_file"],
+        )
+        if self.is_save:
+            if self.platform["rgb_output"]:
+                save_output_array(
+                    self.platform["in_file"],
+                    self.img,
+                    "Out_scale_",
+                    self.platform,
+                    self.sensor_info["bit_depth"],
+                )
+            else:
+                save_output_array_yuv(
+                    self.platform["in_file"],
+                    self.img,
+                    "Out_scale_",
+                    self.platform,
+                )
+
+    def execute(self):
+        """Execute scaling if enabled."""
+        print("Scale = " + str(self.enable))
+
+        if self.enable:
+            start = time.time()
+            scaled_img = self.apply_scaling()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = scaled_img
+        self.save()
+        return self.img
 
 
 ################################################################################

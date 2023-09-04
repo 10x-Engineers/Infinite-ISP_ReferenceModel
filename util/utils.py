@@ -283,30 +283,26 @@ def save_output_array(img_name, output_array, module_name, platform, bitdepth):
     # vector is generated
     filename = OUTPUT_ARRAY_DIR + module_name + img_name.split(".")[0]
 
-    if platform["save_format"] == "npy":
+    if platform["save_format"] == "npy" or platform["save_format"] == "both":
+
         # save image as npy array
         np.save(filename, output_array.astype("uint16"))
-    elif platform["save_format"] == "png":
-        # save Image as .png
-        plt.imsave(filename + ".png", output_array)
-    else:
-        # save image as npy array
-        np.save(filename, output_array.astype("uint16"))
+
+    if platform["save_format"] == "png" or platform["save_format"] == "both":
 
         # convert image to 8-bit image if required
         if output_array.dtype != np.uint8 and len(output_array.shape) > 2:
             shift_by = bitdepth - 8
             output_array = (output_array >> shift_by).astype("uint8")
 
-        # save image as .png
+        # save Image as .png
         plt.imsave(filename + ".png", output_array)
 
 
-def save_output_array_yuv(img_name, output_array, module_name, swap_on, platform):
+def save_output_array_yuv(img_name, output_array, module_name, platform):
     """
     Saves output array [yuv] for pipline modules
     """
-
     # if automation is not being executed, the output directory needs to be created
     if not platform["generate_tv"]:
         # create directory to save array
@@ -317,20 +313,18 @@ def save_output_array_yuv(img_name, output_array, module_name, swap_on, platform
     # vector is generated
     filename = OUTPUT_ARRAY_DIR + module_name + img_name.split(".")[0]
 
-    if platform["save_format"] == "npy":
+    # save image as .nppy array
+    if platform["save_format"] == "npy" or platform["save_format"] == "both":
         # sawp_on is used for scenarios in devices where YUV channels are stored as YVU
         # so it swaps V and U for hardware compatibility
-        if swap_on:
+        if platform["rev_yuv_channels"]:
             swapped_array = rev_yuv(output_array)
             np.save(filename, swapped_array.astype("uint16"))
         else:
             np.save(filename, output_array.astype("uint16"))
-    elif platform["save_format"] == "png":
-        # save image as .png
-        plt.imsave(filename + ".png", output_array)
-    else:
-        # save image as both .png and .npy
-        np.save(filename, output_array.astype("uint16"))
+
+    # save image as .png
+    if platform["save_format"] == "png" or platform["save_format"] == "both":
         plt.imsave(filename + ".png", output_array)
 
 

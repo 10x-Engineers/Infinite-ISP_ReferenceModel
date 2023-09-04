@@ -12,7 +12,7 @@ import warnings
 import os
 import numpy as np
 from scipy import ndimage
-from util.utils import create_coeff_file
+from util.utils import create_coeff_file, save_output_array
 
 
 class BayerNoiseReduction:
@@ -20,9 +20,11 @@ class BayerNoiseReduction:
     Noise Reduction in Bayer domain
     """
 
-    def __init__(self, img, sensor_info, parm_bnr, platform):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_bnr):
+        self.img = img.copy()
         self.enable = parm_bnr["is_enable"]
+        self.is_save = parm_bnr["is_save"]
+        self.platform = platform
         self.sensor_info = sensor_info
         self.parm_bnr = parm_bnr
         self.is_progress = platform["disable_progress_bar"]
@@ -59,10 +61,10 @@ class BayerNoiseReduction:
 
         interp_g = np.zeros((height, width), dtype=np.int16)
         in_img_r = np.zeros(
-            (np.uint32(height / 2), np.uint32(width / 2)), dtype=np.int16
+            (int(height / 2), int(width / 2)), dtype=np.int16
         )
         in_img_b = np.zeros(
-            (np.uint32(height / 2), np.uint32(width / 2)), dtype=np.int16
+            (int(height / 2), int(width / 2)), dtype=np.int16
         )
 
         # convert bayer image into sub-images for filtering each colour ch
@@ -89,7 +91,7 @@ class BayerNoiseReduction:
                 [0, 0, 2, 0, 0],
                 [0, 0, -1, 0, 0],
             ],
-            dtype=np.int32,
+            dtype=np.int64,
         )
 
         # interp_kern_g_at_r = interp_kern_g_at_r / np.sum(interp_kern_g_at_r)
@@ -102,20 +104,20 @@ class BayerNoiseReduction:
                 [0, 0, 2, 0, 0],
                 [0, 0, -1, 0, 0],
             ],
-            dtype=np.int32,
+            dtype=np.int64,
         )
 
         # interp_kern_g_at_b = interp_kern_g_at_b / np.sum(interp_kern_g_at_b)
 
         # convolve the kernel with image and mask the result based on given bayer pattern
         kern_filt_g_at_r = ndimage.convolve(
-            np.int32(in_img), interp_kern_g_at_r, mode="reflect"
+            np.int64(in_img), interp_kern_g_at_r, mode="reflect"
         )
         kern_filt_g_at_b = ndimage.convolve(
-            np.int32(in_img), interp_kern_g_at_b, mode="reflect"
+            np.int64(in_img), interp_kern_g_at_b, mode="reflect"
         )
-        kern_filt_g_at_r = np.int32(kern_filt_g_at_r / 8)
-        kern_filt_g_at_b = np.int32(kern_filt_g_at_b / 8)
+        kern_filt_g_at_r = np.int64(kern_filt_g_at_r / 8)
+        kern_filt_g_at_b = np.int64(kern_filt_g_at_b / 8)
 
         # clip any interpolation overshoots to [0 max] range
         kern_filt_g_at_r = np.clip(kern_filt_g_at_r, 0, 2**bit_depth - 1)
@@ -123,10 +125,10 @@ class BayerNoiseReduction:
 
         interp_g = in_img.copy()
         interp_g_at_r = np.zeros(
-            (np.uint32(height / 2), np.uint32(width / 2)), dtype=np.int16
+            (int(height / 2), int(width / 2)), dtype=np.int16
         )
         interp_g_at_b = np.zeros(
-            (np.uint32(height / 2), np.uint32(width / 2)), dtype=np.int16
+            (int(height / 2), int(width / 2)), dtype=np.int16
         )
 
         if bayer_pattern == "rggb":
@@ -419,8 +421,8 @@ class BayerNoiseReduction:
         )
 
         # filt_out = np.zeros(in_img.shape, dtype=np.float32)
-        norm_fact = np.zeros(in_img.shape, dtype=np.int32)
-        sum_filt_out = np.zeros(in_img.shape, dtype=np.int32)
+        norm_fact = np.zeros(in_img.shape, dtype=np.int64)
+        sum_filt_out = np.zeros(in_img.shape, dtype=np.int64)
 
         for i in range(spatial_kern):
             for j in range(spatial_kern):
@@ -437,14 +439,27 @@ class BayerNoiseReduction:
                 color_kern = self.x_bf_make_color_kern(diff, curve, 255)
                 # Adding normalization factor for each pixel needed to average out the
                 # final result
-                norm_fact += s_kern[i, j] * np.int32(color_kern)
+                norm_fact += s_kern[i, j] * np.int64(color_kern)
                 # Summing up the final result
                 sum_filt_out += (
-                    s_kern[i, j] * np.int32(color_kern) * np.int32(in_img_ext_array)
+                    s_kern[i, j] * np.int64(color_kern) * np.int64(in_img_ext_array)
                 )
 
-        filt_out = np.int16(np.int32(sum_filt_out) / np.int32(norm_fact))
+        filt_out = np.uint16(np.int64(sum_filt_out) / np.int64(norm_fact))
         return filt_out
+
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array(
+                self.platform["in_file"],
+                self.img,
+                "Out_bayer_noise_reduction_",
+                self.platform,
+                self.sensor_info["bit_depth"],
+            )
 
     def execute(self):
         """
@@ -452,11 +467,11 @@ class BayerNoiseReduction:
         """
         print("Bayer Noise Reduction = " + str(self.enable))
 
-        if self.enable is False:
-            # return the same image as input image
-            return self.img
-        else:
+        if self.enable is True:
             start = time.time()
             bnr_out = self.apply_bnr()
             print(f"  Execution time: {time.time() - start:.3f}s")
-            return bnr_out
+            self.img = bnr_out
+
+        self.save()
+        return self.img

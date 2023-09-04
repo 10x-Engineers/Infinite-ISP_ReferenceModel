@@ -60,12 +60,6 @@ class InfiniteISP:
 
         # Extract basic sensor info
         self.sensor_info = c_yaml["sensor_info"]
-        self.bit_range = self.sensor_info["range"]
-        self.bayer = self.sensor_info["bayer_pattern"]
-        self.width = self.sensor_info["width"]
-        self.height = self.sensor_info["height"]
-        self.bpp = self.sensor_info["bit_depth"]
-        self.rev_yuv = self.platform["rev_yuv_channels"]
 
         # Get isp module params
         self.parm_cro = c_yaml["crop"]
@@ -88,6 +82,8 @@ class InfiniteISP:
         self.parm_yuv = c_yaml["yuv_conversion_format"]
         self.c_yaml = c_yaml
 
+        self.platform["rgb_output"] = self.parm_rgb["is_enable"]
+
     def load_raw(self):
         """
         Load raw image from provided path
@@ -98,96 +94,63 @@ class InfiniteISP:
         self.in_file = path_object.stem
         self.out_file = "Out_" + self.in_file
 
+        self.platform["in_file"] = self.in_file
+        self.platform["out_file"] = self.out_file
+
+        width = self.sensor_info["width"]
+        height = self.sensor_info["height"]
+        bit_depth = self.sensor_info["bit_depth"]
+
         # Load Raw
         if path_object.suffix == ".raw":
-            if self.bpp > 8:
+            if bit_depth > 8:
                 self.raw = np.fromfile(raw_path, dtype=np.uint16).reshape(
-                    (self.height, self.width)
+                    (height, width)
                 )
             else:
-                self.raw = np.fromfile(raw_path, dtype=np.uint8).reshape(
-                    (self.height, self.width)
-                ).astype(np.uint16)
+                self.raw = (
+                    np.fromfile(raw_path, dtype=np.uint8)
+                    .reshape((height, width))
+                    .astype(np.uint16)
+                )
         else:
             img = rawpy.imread(raw_path)
             self.raw = img.raw_image
 
-    def run_pipeline(self, visualize_output):
+    def run_pipeline(self, visualize_output=True):
         """
         Run ISP-Pipeline for a raw-input image
         """
-        # save pipeline input array
-        if self.parm_cro["is_save"]:
-            util.save_output_array(
-                self.in_file, self.raw, "Inpipeline_crop_", self.platform, self.bpp
-            )
 
         # =====================================================================
         # Cropping
-        crop = Crop(self.raw, self.sensor_info, self.parm_cro)
+        crop = Crop(self.raw, self.platform, self.sensor_info, self.parm_cro)
         cropped_img = crop.execute()
 
-        # save module output if enabled
-        if self.parm_cro["is_save"]:
-            util.save_output_array(
-                self.in_file, cropped_img, "Out_crop_", self.platform, self.bpp
-            )
-
         # =====================================================================
-
         #  Dead pixels correction
-        dpc = DPC(cropped_img, self.sensor_info, self.parm_dpc, self.platform)
+        dpc = DPC(cropped_img, self.platform, self.sensor_info, self.parm_dpc)
         dpc_raw = dpc.execute()
 
-        # save module output if enabled
-        if self.parm_dpc["is_save"]:
-            util.save_output_array(
-                self.in_file, dpc_raw, "Out_dead_pixel_correction_", self.platform, self.bpp
-            )
-
         # =====================================================================
-
         # Black level correction
-        blc = BLC(dpc_raw, self.sensor_info, self.parm_blc)
+        blc = BLC(dpc_raw, self.platform, self.sensor_info, self.parm_blc)
         blc_raw = blc.execute()
 
-        # save module output if enabled
-        if self.parm_blc["is_save"]:
-            util.save_output_array(
-                self.in_file, blc_raw, "Out_black_level_correction_", self.platform, self.bpp
-            )
-
         # =====================================================================
-
         # OECF
-        oecf = OECF(blc_raw, self.sensor_info, self.parm_oec)
+        oecf = OECF(blc_raw, self.platform, self.sensor_info, self.parm_oec)
         oecf_raw = oecf.execute()
-
-        # save module output if enabled
-        if self.parm_oec["is_save"]:
-            util.save_output_array(self.in_file, oecf_raw, "Out_oecf_", self.platform, self.bpp)
 
         # =====================================================================
         # Digital Gain
-        dga = DG(oecf_raw, self.sensor_info, self.parm_dga)
+        dga = DG(oecf_raw, self.platform, self.sensor_info, self.parm_dga)
         dga_raw, self.dga_current_gain = dga.execute()
-
-        # save module output if enabled
-        if self.parm_dga["is_save"]:
-            util.save_output_array(
-                self.in_file, dga_raw, "Out_digital_gain_", self.platform, self.bpp
-            )
 
         # =====================================================================
         # Bayer noise reduction
-        bnr = BNR(dga_raw, self.sensor_info, self.parm_bnr, self.platform)
+        bnr = BNR(dga_raw, self.platform, self.sensor_info, self.parm_bnr)
         bnr_raw = bnr.execute()
-
-        # save module output if enabled
-        if self.parm_bnr["is_save"]:
-            util.save_output_array(
-                self.in_file, bnr_raw, "Out_bayer_noise_reduction_", self.platform, self.bpp
-            )
 
         # =====================================================================
         # Auto White Balance
@@ -196,46 +159,23 @@ class InfiniteISP:
 
         # =====================================================================
         # White balancing
-        wbc = WB(bnr_raw, self.sensor_info, self.parm_wbc)
+        wbc = WB(bnr_raw, self.platform, self.sensor_info, self.parm_wbc)
         wb_raw = wbc.execute()
-
-        # save module output if enabled
-        if self.parm_wbc["is_save"]:
-            util.save_output_array(
-                self.in_file, wb_raw, "Out_white_balance_", self.platform, self.bpp
-            )
 
         # =====================================================================
         # CFA demosaicing
-        cfa_inter = Demosaic(wb_raw, self.sensor_info)
+        cfa_inter = Demosaic(wb_raw, self.platform, self.sensor_info, self.parm_dem)
         demos_img = cfa_inter.execute()
-
-        # save module output if enabled
-        if self.parm_dem["is_save"]:
-            util.save_output_array(
-                self.in_file, demos_img, "Out_demosaic_", self.platform, self.bpp
-            )
 
         # =====================================================================
         # Color correction matrix
-        ccm = CCM(demos_img, self.sensor_info, self.parm_ccm)
+        ccm = CCM(demos_img, self.platform, self.sensor_info, self.parm_ccm)
         ccm_img = ccm.execute()
-
-        # save module output if enabled
-        if self.parm_ccm["is_save"]:
-            util.save_output_array(
-                self.in_file, ccm_img, "Out_color_correction_matrix_", self.platform, self.bpp
-            )
 
         # =====================================================================
         # Gamma
-        gmc = GC(ccm_img, self.sensor_info, self.parm_gmc)
+        gmc = GC(ccm_img, self.platform, self.sensor_info, self.parm_gmc)
         gamma_raw = gmc.execute()
-        # save module output if enabled
-        if self.parm_gmc["is_save"]:
-            util.save_output_array(
-                self.in_file, gamma_raw, "Out_gamma_correction_", self.platform, self.bpp
-            )
 
         # =====================================================================
         # Auto-Exposure
@@ -244,85 +184,35 @@ class InfiniteISP:
 
         # =====================================================================
         # Color space conversion
-        csc = CSC(gamma_raw, self.sensor_info, self.parm_csc)
+        csc = CSC(gamma_raw, self.platform, self.sensor_info, self.parm_csc)
         csc_img = csc.execute()
-        # save module output if enabled
-        if self.parm_csc["is_save"]:
-            util.save_output_array_yuv(
-                self.in_file,
-                csc_img,
-                "Out_color_space_conversion_",
-                self.rev_yuv,
-                self.platform,
-            )
 
         # =====================================================================
         # 2d noise reduction
         nr2d = NR2D(csc_img, self.sensor_info, self.parm_2dn, self.platform)
         nr2d_img = nr2d.execute()
-        # save module output if enabled
-        if self.parm_2dn["is_save"]:
-            util.save_output_array_yuv(
-                self.in_file,
-                nr2d_img,
-                "Out_2d_noise_reduction_",
-                self.rev_yuv,
-                self.platform,
-            )
 
         # =====================================================================
         # RGB conversion
-        rgbc = RGBC(nr2d_img, self.sensor_info, self.parm_rgb, self.parm_csc)
+        rgbc = RGBC(
+            nr2d_img, self.platform, self.sensor_info, self.parm_rgb, self.parm_csc
+        )
         rgbc_img = rgbc.execute()
-        # save module output if enabled
-        if self.parm_rgb["is_save"]:
-            util.save_output_array(
-                self.in_file, rgbc_img, "Out_rgb_conversion_", self.platform, self.bpp
-            )
-
-        # np.save("output.npy", rgbc_img.astype(np.uint16))
 
         # =====================================================================
         # crop image to 1920x1080 or 1920x1440
-        irc = IRC(rgbc_img, self.parm_irc)
+        irc = IRC(rgbc_img, self.platform, self.sensor_info, self.parm_irc)
         irc_img = irc.execute()
-        # save module output if enabled
-        if self.parm_irc["is_save"]:
-            util.save_output_array_yuv(
-                self.in_file,
-                irc_img,
-                "Out_invalid_region_crop_",
-                self.rev_yuv,
-                self.platform,
-            )
 
         # =====================================================================
         # Scaling
-        scale = Scale(irc_img, self.sensor_info, self.parm_sca)
+        scale = Scale(irc_img, self.platform, self.sensor_info, self.parm_sca)
         scaled_img = scale.execute()
-        # save module output if enabled
-        if self.parm_sca["is_save"]:
-            util.save_output_array_yuv(
-                self.in_file, scaled_img, "Out_scale_", self.rev_yuv, self.platform
-            )
 
         # =====================================================================
         # YUV saving format 444, 422 etc
-        yuv = YUV_C(
-            scaled_img, self.sensor_info, self.parm_yuv, self.in_file
-        )  # parm_csc)
+        yuv = YUV_C(scaled_img, self.platform, self.sensor_info, self.parm_yuv)
         yuv_conv = yuv.execute()
-
-        # save module output if enabled
-        if self.parm_yuv["is_save"]:
-            self.platform["save_format"] = "npy"
-            util.save_output_array(
-                self.in_file,
-                yuv_conv,
-                f"Out_yuv_conversion_format_{self.parm_yuv['conv_type']}_",
-                self.platform, self.bpp
-            )
-            self.platform["save_format"] = self.c_yaml["platform"]["save_format"]
 
         out_img = yuv_conv  # original Output of ISP
         out_dim = scaled_img.shape  # dimensions of Output Image
@@ -367,7 +257,7 @@ class InfiniteISP:
                 self.out_file, out_rgb, self.c_yaml, self.platform["generate_tv"]
             )
 
-    def execute(self, img_path=None, visualize_output=True):
+    def execute(self, img_path=None):
         """
         Start execution of Infinite-ISP
         """
@@ -386,7 +276,7 @@ class InfiniteISP:
 
         if not self.render_3a:
             # Run ISP-Pipeline once
-            self.run_pipeline(visualize_output)
+            self.run_pipeline(visualize_output=True)
             # Display 3A Statistics
         else:
             # Run ISP-Pipeline till Correct Exposure with AWB gains
@@ -406,12 +296,12 @@ class InfiniteISP:
         """
         # Update 3A in c_yaml too because it is output config
         if awb_on is True and self.parm_wbc["is_auto"] and self.parm_awb["is_enable"]:
-            self.parm_wbc["r_gain"] = self.c_yaml["white_balance"][
-                "r_gain"
-            ] = self.awb_gains[0]
-            self.parm_wbc["b_gain"] = self.c_yaml["white_balance"][
-                "b_gain"
-            ] = self.awb_gains[1]
+            self.parm_wbc["r_gain"] = self.c_yaml["white_balance"]["r_gain"] = float(
+                self.awb_gains[0]
+            )
+            self.parm_wbc["b_gain"] = self.c_yaml["white_balance"]["b_gain"] = float(
+                self.awb_gains[1]
+            )
         if ae_on is True and self.parm_dga["is_auto"] and self.parm_ae["is_enable"]:
             self.parm_dga["ae_feedback"] = self.c_yaml["digital_gain"][
                 "ae_feedback"
@@ -435,8 +325,61 @@ class InfiniteISP:
             (self.ae_feedback == 0)
             or (self.ae_feedback == -1 and self.dga_current_gain == max_dg)
             or (self.ae_feedback == 1 and self.dga_current_gain == 0)
+            or self.ae_feedback is None
         ):
             self.run_pipeline(visualize_output=False)
             self.load_3a_statistics()
 
         self.run_pipeline(visualize_output=True)
+
+    def update_sensor_info(self, sensor_info, update_blc_wb=False):
+        """
+        Update sensor_info in config files
+        """
+        self.sensor_info["width"] = self.c_yaml["sensor_info"]["width"] = sensor_info[0]
+
+        self.sensor_info["height"] = self.c_yaml["sensor_info"]["height"] = sensor_info[
+            1
+        ]
+
+        self.sensor_info["bit_depth"] = self.c_yaml["sensor_info"][
+            "bit_depth"
+        ] = sensor_info[2]
+
+        self.sensor_info["bayer_pattern"] = self.c_yaml["sensor_info"][
+            "bayer_pattern"
+        ] = sensor_info[3]
+
+        if update_blc_wb:
+            self.parm_blc["r_offset"] = self.c_yaml["black_level_correction"][
+                "r_offset"
+            ] = sensor_info[4][0]
+            self.parm_blc["gr_offset"] = self.c_yaml["black_level_correction"][
+                "gr_offset"
+            ] = sensor_info[4][1]
+            self.parm_blc["gb_offset"] = self.c_yaml["black_level_correction"][
+                "gb_offset"
+            ] = sensor_info[4][2]
+            self.parm_blc["b_offset"] = self.c_yaml["black_level_correction"][
+                "b_offset"
+            ] = sensor_info[4][3]
+
+            self.parm_blc["r_sat"] = self.c_yaml["black_level_correction"][
+                "r_sat"
+            ] = sensor_info[5]
+            self.parm_blc["gr_sat"] = self.c_yaml["black_level_correction"][
+                "gr_sat"
+            ] = sensor_info[5]
+            self.parm_blc["gb_sat"] = self.c_yaml["black_level_correction"][
+                "gb_sat"
+            ] = sensor_info[5]
+            self.parm_blc["b_sat"] = self.c_yaml["black_level_correction"][
+                "b_sat"
+            ] = sensor_info[5]
+
+            self.parm_wbc["r_gain"] = self.c_yaml["white_balance"][
+                "r_gain"
+            ] = sensor_info[6][0]
+            self.parm_wbc["b_gain"] = self.c_yaml["white_balance"][
+                "b_gain"
+            ] = sensor_info[6][2]
