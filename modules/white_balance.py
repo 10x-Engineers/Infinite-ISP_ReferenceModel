@@ -7,7 +7,7 @@ Author: 10xEngineers Pvt Ltd
 """
 import time
 import numpy as np
-from util.utils import get_approximate
+from util.utils import get_approximate, save_output_array
 
 
 class WhiteBalance:
@@ -15,14 +15,16 @@ class WhiteBalance:
     White balance Module
     """
 
-    def __init__(self, img, sensor_info, parm_wbc):
+    def __init__(self, img, platform, sensor_info, parm_wbc):
         """
         Class Constructor
         """
-        self.img = img
+        self.img = img.copy()
         self.enable = parm_wbc["is_enable"]
+        self.is_save = parm_wbc["is_save"]
         self.is_debug = parm_wbc["is_debug"]
         self.is_auto = parm_wbc["is_auto"]
+        self.platform = platform
         self.sensor_info = sensor_info
         self.parm_wbc = parm_wbc
         self.bayer = self.sensor_info["bayer_pattern"]
@@ -66,6 +68,19 @@ class WhiteBalance:
 
         return raw_whitebal
 
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array(
+                self.platform["in_file"],
+                self.img,
+                "Out_white_balance_",
+                self.platform,
+                self.sensor_info["bit_depth"],
+            )
+
     def execute(self):
         """
         Execute White Balance Module
@@ -76,6 +91,7 @@ class WhiteBalance:
             start = time.time()
             wb_out = self.apply_wb_parameters()
             print(f"  Execution time: {time.time() - start:.3f}s")
-            return wb_out
-        print("Manual White balancing = " + "False")
+            self.img = wb_out
+
+        self.save()
         return self.img

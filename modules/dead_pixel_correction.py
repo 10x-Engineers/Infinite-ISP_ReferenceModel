@@ -10,21 +10,24 @@ import time
 import numpy as np
 from tqdm import tqdm
 from scipy.ndimage import maximum_filter, minimum_filter, correlate
+from util.utils import save_output_array
 
 
 class DeadPixelCorrection:
     "Dead Pixel Correction"
 
-    def __init__(self, img, sensor_info, parm_dpc, platform):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_dpc):
+        self.img = img.copy()
         self.enable = parm_dpc["is_enable"]
+        self.is_save = parm_dpc["is_save"]
+        self.platform = platform
         self.sensor_info = sensor_info
-        self.parm_dpc = parm_dpc
+        self.in_file = platform["in_file"]
         self.is_progress = platform["disable_progress_bar"]
         self.is_leave = platform["leave_pbar_string"]
         self.bpp = self.sensor_info["bit_depth"]
-        self.threshold = self.parm_dpc["dp_threshold"]
-        self.is_debug = self.parm_dpc["is_debug"]
+        self.threshold = parm_dpc["dp_threshold"]
+        self.is_debug = parm_dpc["is_debug"]
 
     def padding(self):
         """Return a mirror padded copy of image."""
@@ -424,16 +427,30 @@ class DeadPixelCorrection:
             print("   - DPC - Threshold = ", self.threshold)
         return self.img
 
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array(
+                self.in_file,
+                self.img,
+                "Out_dead_pixel_correction_",
+                self.platform,
+                self.bpp,
+            )
+
     def execute(self):
         """Execute DPC Module"""
 
         print("Dead Pixel Correction = " + str(self.enable))
 
-        if self.enable is False:
-            return self.img
-        else:
+        if self.enable:
             start = time.time()
             self.img = np.float32(self.img)
             dpc_out = self.apply_fast_dead_pixel_correction()
-            print(f'  Execution time: {time.time() - start:.3f}s')
-            return dpc_out
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = dpc_out
+
+        self.save()
+        return self.img

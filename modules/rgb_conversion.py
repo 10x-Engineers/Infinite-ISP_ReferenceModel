@@ -14,6 +14,7 @@ Code / Paper  Reference: https://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.709_conver
 
 import time
 import numpy as np
+from util.utils import save_output_array_yuv, save_output_array
 
 
 class RGBConversion:
@@ -21,11 +22,13 @@ class RGBConversion:
     YUV to RGB Conversion
     """
 
-    def __init__(self, img, sensor_info, parm_rgb, parm_csc):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_rgb, parm_csc):
+        self.img = img.copy()
+        self.platform = platform
         self.sensor_info = sensor_info
         self.parm_rgb = parm_rgb
         self.enable = self.parm_rgb["is_enable"]
+        self.is_save = self.parm_rgb["is_save"]
         self.bit_depth = sensor_info["bit_depth"]
         self.conv_std = parm_csc["conv_standard"]
         self.yuv_img = img
@@ -70,6 +73,27 @@ class RGBConversion:
         self.yuv_img = np.uint8(self.yuv_img)
         return self.yuv_img
 
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            if self.enable:
+                save_output_array(
+                    self.platform["in_file"],
+                    self.img,
+                    "Out_rgb_conversion_",
+                    self.platform,
+                    self.bit_depth,
+                )
+            else:
+                save_output_array_yuv(
+                    self.platform["in_file"],
+                    self.img,
+                    "Out_rgb_conversion_",
+                    self.platform,
+                )
+
     def execute(self):
         """
         Execute RGB Conversion
@@ -79,5 +103,6 @@ class RGBConversion:
             start = time.time()
             rgb_out = self.yuv_to_rgb()
             print(f"  Execution time: {time.time() - start:.3f}s")
-            return rgb_out
-        return self.yuv_img
+            self.img = rgb_out
+        self.save()
+        return self.img

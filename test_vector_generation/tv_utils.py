@@ -81,6 +81,16 @@ def rename_files(path, sub_str):
         os.rename(path + file, path + new_name)
 
 
+def find_files(filename, search_path):
+    """
+    This function is used to find the files in the search_path
+    """
+    for _, _, files in os.walk(search_path):
+        if filename in files:
+            return True
+    return False
+
+
 def restructure_dir(path, out_module_name):
     """
     This function restuctures the given folder as follows:
@@ -137,13 +147,16 @@ def convert_npytobin(path, nametag, raw_ext=".bin"):
         return np_arr
 
 
-def get_input_tv(path, input_ext, rev_flag, rgb_conv_flag):
+def get_input_tv(path, rev_flag, rgb_conv_flag):
 
     """This function converts the NumPy arrays to binary files in input folder,
     and reorders the output files to ensure accurate comparison."""
 
     # for Input files convert npy to raw
     filelist = [file for file in os.listdir(path + "input/") if ".npy" == file[-4:]]
+    if not filelist:
+        print("Empty folder found. Enable is_save flag to save input TVs.")
+        exit()
     # check if module output is RGB or YUV
     yuv_out = [
         "color_space_conversion",
@@ -183,7 +196,7 @@ def get_input_tv(path, input_ext, rev_flag, rgb_conv_flag):
 
     for file in filelist:
         f_path = path + "input/" + file
-        convert_npytobin(f_path, f_nametag, input_ext)
+        convert_npytobin(f_path, f_nametag)
 
     # for output files change sequence of channels (h,w,ch)-->(ch,h,w)
     files = [file for file in os.listdir(path + "GM_out/") if ".npy" == file[-4:]]
@@ -233,3 +246,19 @@ def represent_list(self, data):
     """This function ensures that the lookup table are stored on flow style
     to keep the saved yaml file readable."""
     return self.represent_sequence("tag:yaml.org,2002:seq", data, flow_style=True)
+
+
+def save_config(dict_obj, save_path):
+    """This function saves a dictionary as a yaml file using custom dumper."""
+
+    # Set list format to flowstyle to dump yaml file
+    yaml.add_representer(list, represent_list)
+
+    with open(save_path, "w", encoding="utf-8") as file:
+        yaml.dump(
+            dict_obj,
+            file,
+            sort_keys=False,
+            Dumper=CustomDumper,
+            width=17000,
+        )

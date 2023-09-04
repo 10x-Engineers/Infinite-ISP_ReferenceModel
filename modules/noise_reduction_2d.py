@@ -12,7 +12,7 @@ import time
 import os
 import numpy as np
 from tqdm import tqdm
-from util.utils import create_coeff_file
+from util.utils import create_coeff_file, save_output_array_yuv
 
 
 class NoiseReduction2d:
@@ -21,14 +21,15 @@ class NoiseReduction2d:
     """
 
     def __init__(self, img, sensor_info, parm_2dnr, platform):
-        self.img = img
+        self.img = img.copy()
         self.enable = parm_2dnr["is_enable"]
+        self.is_save = parm_2dnr["is_save"]
+        self.platform = platform
         self.sensor_info = sensor_info
         self.parm_2dnr = parm_2dnr
         self.is_progress = platform["disable_progress_bar"]
         self.is_leave = platform["leave_pbar_string"]
         self.save_lut = platform["save_lut"]
-
 
     def make_weighted_curve(self, n_ind):
         """
@@ -38,7 +39,7 @@ class NoiseReduction2d:
         curve = np.zeros((n_ind, 2), np.int32)
         diff = np.linspace(0, 255, n_ind)
         # Considering maximum weight to be 31 (5 bit)
-        wts = (np.exp(-(diff**2) / h_par ** 2) * 31).astype(np.int32)
+        wts = (np.exp(-(diff**2) / h_par**2) * 31).astype(np.int32)
         curve[:, 0] = diff
         curve[:, 1] = wts
         return curve
@@ -129,7 +130,6 @@ class NoiseReduction2d:
                 # Adding up all the weights for final mean values at each pixel location
                 final_weights += weight_for_each_shifted_array
 
-
         # Averaging out all the pixel
         denoised_y_channel = np.float32(denoised_y_channel) / final_weights
         denoised_y_channel = np.uint8(
@@ -151,16 +151,29 @@ class NoiseReduction2d:
 
         return denoised_out
 
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array_yuv(
+                self.platform["in_file"],
+                self.img,
+                "Out_2d_noise_reduction_",
+                self.platform,
+            )
+
     def execute(self):
         """
         Executing 2D noise reduction module
         """
         print("Noise Reduction 2d = " + str(self.enable))
 
-        if self.enable is False:
-            return self.img
-        else:
+        if self.enable is True:
             start = time.time()
             s_out = self.apply_nlm()
             print(f"  Execution time: {time.time() - start:.3f}s")
-            return s_out
+            self.img = s_out
+
+        self.save()
+        return self.img

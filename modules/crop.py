@@ -7,7 +7,9 @@ Author: 10xEngineers Pvt Ltd
 """
 
 import time
+import re
 import numpy as np
+from util.utils import save_output_array
 
 
 class Crop:
@@ -22,11 +24,13 @@ class Crop:
     as the input image.
     """
 
-    def __init__(self, img, sensor_info, parm_cro):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_cro):
+        self.img = img.copy()
         self.sensor_info = sensor_info
+        self.platform = platform
         self.parm_cro = parm_cro
         self.enable = parm_cro["is_enable"]
+        self.is_save = parm_cro["is_save"]
 
     def crop(self, img, rows_to_crop=0, cols_to_crop=0):
 
@@ -89,14 +93,41 @@ class Crop:
             print("   - Crop - Shape of cropped image = ", cropped_img.shape)
         return cropped_img
 
+    def save(self, filename_tag):
+        """
+        Function to save module output
+        """
+        # update size of array in filename
+        self.platform["in_file"] = re.sub(
+            r"\d+x\d+",
+            f"{self.img.shape[1]}x{self.img.shape[0]}",
+            self.platform["in_file"],
+        )
+        if self.is_save:
+            save_output_array(
+                self.platform["in_file"],
+                self.img,
+                filename_tag,
+                self.platform,
+                self.sensor_info["bit_depth"],
+            )
+
     def execute(self):
         """Execute cropping if enabled."""
         print("Crop = " + str(self.enable))
+
+        # Save the input of crop module
+        self.save("Inpipeline_crop_")
+
+        # crop image if enabled
         if self.enable:
             start = time.time()
             cropped_img = self.apply_cropping()
             print(f"  Execution time: {time.time() - start:.3f}s")
-            return cropped_img
+            self.img = cropped_img
+
+        # save the output of crop module
+        self.save("Out_crop_")
         return self.img
 
 

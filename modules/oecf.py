@@ -7,28 +7,19 @@ Author: 10xEngineers Pvt Ltd
 """
 import time
 import numpy as np
+from util.utils import save_output_array
 
 
 class OECF:
     "Optical Electronic Conversion Function - correction"
 
-    def __init__(self, img, sensor_info, parm_oecf):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_oecf):
+        self.img = img.copy()
         self.enable = parm_oecf["is_enable"]
+        self.is_save = parm_oecf["is_save"]
+        self.platform = platform
         self.sensor_info = sensor_info
         self.parm_oecf = parm_oecf
-
-    def execute(self):
-        """Execute OECF if enabled."""
-        print("Optical Electronic Conversion Function = " + str(self.enable))
-
-        if self.enable:
-            start = time.time()
-            oecf_out = self.apply_oecf()
-            print(f'  Execution time: {time.time() - start:.3f}s')
-            return oecf_out
-
-        return self.img
 
     def apply_oecf(self):
         """Execute OECF."""
@@ -74,3 +65,28 @@ class OECF:
 
         raw_oecf = np.uint16(np.clip(raw_oecf, 0, (2**bpp) - 1))
         return raw_oecf
+
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array(
+                self.platform["in_file"],
+                self.img,
+                "Out_oecf_",
+                self.platform,
+                self.sensor_info["bit_depth"],
+            )
+
+    def execute(self):
+        """Execute OECF if enabled."""
+        print("Optical Electronic Conversion Function = " + str(self.enable))
+
+        if self.enable:
+            start = time.time()
+            oecf_out = self.apply_oecf()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = oecf_out
+        self.save()
+        return self.img

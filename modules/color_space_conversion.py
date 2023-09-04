@@ -15,14 +15,18 @@ Code / Paper  Reference: https://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.709_conver
 import time
 import numpy as np
 
+from util.utils import save_output_array_yuv
+
 
 class ColorSpaceConversion:
     """
     Color Space Conversion
     """
 
-    def __init__(self, img, sensor_info, parm_csc):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_csc):
+        self.img = img.copy()
+        self.is_save = parm_csc["is_save"]
+        self.platform = platform
         self.sensor_info = sensor_info
         self.parm_csc = parm_csc
         self.bit_depth = sensor_info["bit_depth"]
@@ -83,6 +87,18 @@ class ColorSpaceConversion:
         self.img = yuv2d_t.reshape(self.img.shape).astype(np.uint8)
         return self.img
 
+    def save(self):
+        """
+        Function to save module output
+        """
+        if self.is_save:
+            save_output_array_yuv(
+                self.platform["in_file"],
+                self.img,
+                "Out_color_space_conversion_",
+                self.platform,
+            )
+
     def execute(self):
         """
         Execute Color Space Conversion
@@ -92,4 +108,6 @@ class ColorSpaceConversion:
         start = time.time()
         csc_out = self.rgb_to_yuv_8bit()
         print(f"  Execution time: {time.time() - start:.3f}s")
-        return csc_out
+        self.img = csc_out
+        self.save()
+        return self.img

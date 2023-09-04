@@ -12,19 +12,24 @@ Author: 10xEngineers Pvt Ltd
 ------------------------------------------------------------
 """
 import time
+import re
 import numpy as np
+from util.utils import save_output_array
 
 
 class YUVConvFormat:
     "YUV Conversion Formats - 444, 442"
 
-    def __init__(self, img, sensor_info, parm_yuv, inputfile_name):  # parm_csc):
-        self.img = img
+    def __init__(self, img, platform, sensor_info, parm_yuv):  # parm_csc):
+        self.img = img.copy()
+        self.shape = img.shape
         self.enable = parm_yuv["is_enable"]
+        self.is_save = parm_yuv["is_save"]
         # self.is_csc_enable = parm_csc['is_enable']
         self.sensor_info = sensor_info
+        self.platform = platform
         self.param_yuv = parm_yuv
-        self.in_file = inputfile_name
+        self.in_file = self.platform["in_file"]
 
     def convert2yuv_format(self):
         """Execute YUV conversion."""
@@ -51,6 +56,29 @@ class YUVConvFormat:
 
         return yuv.flatten()
 
+    def save(self):
+        """
+        Function to save module output
+        """
+        # update size of array in filename
+        self.in_file = re.sub(
+            r"\d+x\d+", f"{self.shape[1]}x{self.shape[0]}", self.in_file
+        )
+        if self.is_save:
+            # save format for yuv_conversion_format is .npy only
+            save_format = self.platform["save_format"]
+            self.platform["save_format"] = "npy"
+
+            save_output_array(
+                self.in_file,
+                self.img,
+                f"Out_yuv_conversion_format_{self.param_yuv['conv_type']}_",
+                self.platform,
+                self.sensor_info["bit_depth"],
+            )
+            # restore the original save format
+            self.platform["save_format"] = save_format
+
     def execute(self):
         """Execute YUV conversion if enabled."""
         print(
@@ -61,9 +89,14 @@ class YUVConvFormat:
         )
 
         if self.enable:
-            start = time.time()
-            yuv = self.convert2yuv_format()
-            print(f'  Execution time: {time.time() - start:.3f}s')
-            return yuv
+            if self.platform["rgb_output"]:
+                print("Invalid input for YUV conversion: RGB image format.")
+                self.param_yuv["is_enable"] = False
+            else:
+                start = time.time()
+                yuv = self.convert2yuv_format()
+                print(f"  Execution time: {time.time() - start:.3f}s")
+                self.img = yuv
+
+        self.save()
         return self.img
-        
