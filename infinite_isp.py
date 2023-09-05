@@ -24,6 +24,7 @@ from modules.demosaic import Demosaic
 from modules.color_correction_matrix import ColorCorrectionMatrix as CCM
 from modules.color_space_conversion import ColorSpaceConversion as CSC
 from modules.yuv_conv_format import YUVConvFormat as YUV_C
+from modules.sharpen import Sharpening as SHARP
 from modules.noise_reduction_2d import NoiseReduction2d as NR2D
 from modules.rgb_conversion import RGBConversion as RGBC
 from modules.invalid_region_crop import InvalidRegionCrop as IRC
@@ -75,6 +76,7 @@ class InfiniteISP:
         self.parm_gmc = c_yaml["gamma_correction"]
         self.parm_ae = c_yaml["auto_exposure"]
         self.parm_csc = c_yaml["color_space_conversion"]
+        self.parm_sha = c_yaml["sharpen"]
         self.parm_2dn = c_yaml["2d_noise_reduction"]
         self.parm_rgb = c_yaml["rgb_conversion"]
         self.parm_irc = c_yaml["invalid_region_crop"]
@@ -188,8 +190,13 @@ class InfiniteISP:
         csc_img = csc.execute()
 
         # =====================================================================
+        # Sharpening
+        sharp = SHARP(csc_img, self.platform, self.sensor_info, self.parm_sha)
+        sharp_img = sharp.execute()
+
+        # =====================================================================
         # 2d noise reduction
-        nr2d = NR2D(csc_img, self.sensor_info, self.parm_2dn, self.platform)
+        nr2d = NR2D(sharp_img, self.sensor_info, self.parm_2dn, self.platform)
         nr2d_img = nr2d.execute()
 
         # =====================================================================

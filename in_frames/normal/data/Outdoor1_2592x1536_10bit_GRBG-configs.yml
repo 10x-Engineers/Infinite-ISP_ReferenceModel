@@ -124,8 +124,14 @@ auto_exposure:
 
 color_space_conversion:
   conv_standard: 2
-  is_save: False
-  
+  is_save: false
+
+sharpen:
+  is_enable: true
+  sharpen_sigma: 5
+  sharpen_strength: 1
+  is_save: false
+
 2d_noise_reduction:
   is_enable: True
   window_size: 5
