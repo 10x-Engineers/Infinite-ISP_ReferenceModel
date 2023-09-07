@@ -59,6 +59,7 @@ The table below provides a feature list of the model. The version `1.0` of the m
 | Gamma Correction             |Implements a LUT from config |
 | Auto Exposure                                 | [Auto Exposure](https://www.atlantis-press.com/article/25875811.pdf) <br> - AE stats calculations based on skewness |
 | Color Space Conversion                        | YCbCr digital <br> - BT 601 <br> - Bt 709  <br>   |YCbCr digital <br> - BT 601 <br> - Bt 709  <br> |
+| Edge Enhancement / Sharpeining                | Simple unsharp masking with strength control| 
 | Noise Reduction                               | [Non-local means filter](https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf) <br> - Implements intensity level difference  through a LUT|
 | RGB Conversion                               | Converts YCbCr digital image to RGB|
 | Invalid Region Crop    | Crops image to a fixed size|

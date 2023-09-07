@@ -153,7 +153,15 @@ Below parameters are present each ISP pipeline module they effect the functional
 | color_space_conversion | Details                                                                             |  
 |------------------------|------------------------------------------------------------------------------------                                |   
 | conv_standard          | The standard to be used for conversion <br> - `1` : Bt.709 HD <br> - `2` : Bt.601/407 |   
-   
+
+### Edge Enchancement / Sharpening 
+
+| Sharpening         | Details                                           | 
+|--------------------|---------------------------------------------------|
+| is_enable           | When enabled applies the sharpening | 
+| sharpen_sigma      | Define the Standard Deviation of the Gaussian Filter |   
+| sharpen_strength   | Controls the sharpen strength applied on the high frequency components  |  
+
 ### 2d Noise Reduction
 
 | 2d_noise_reduction | Details                                           | 
