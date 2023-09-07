@@ -129,8 +129,8 @@ color_space_conversion:
 
 sharpen:
   is_enable: true
-  sharpen_sigma: 5
-  sharpen_strength: 1
+  sharpen_sigma: 3
+  sharpen_strength: 2
   is_save: false
 
 2d_noise_reduction:

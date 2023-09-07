@@ -62,7 +62,7 @@ class Sharpening:
         """
 
         sigma = self.parm_sha["sharpen_sigma"]
-        kernel_size = 31
+        kernel_size = int(2 * np.ceil(2 * sigma) + 1)
 
         kernel = self.gaussian_kernel(kernel_size, kernel_size, sigma, sigma)
 
