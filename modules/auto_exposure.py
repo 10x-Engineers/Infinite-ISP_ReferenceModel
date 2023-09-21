@@ -137,7 +137,7 @@ class AutoExposure:
         new_skewness_int = (
             np.int64((m_3_int * 256) / (m_2_int * approx_sqrt_m_2_int)) / 256
         )
-        # new_skewness_int = sign_m3_int * new_skewness_int
+        new_skewness_int = sign_m3_int * new_skewness_int
         if self.is_debug:
             print("   - AE - Approx_Skewness Int = ", new_skewness_int)
 
