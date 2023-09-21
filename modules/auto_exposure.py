@@ -48,7 +48,7 @@ class AutoExposure:
         """
         Get AE Stats window by cropping the offsets
         """
-        offsets = np.ceil(self.stats_window_offset / 4) * 4
+        offsets = self.stats_window_offset
         top = int(offsets[0])
         bottom = None if offsets[1] == 0 else -int(offsets[1])
         left = int(offsets[2])
@@ -104,7 +104,7 @@ class AutoExposure:
         Zwillinger, D. and Kokoska, S. (2000). CRC Standard Probability and Statistics
         Tables and Formulae. Chapman & Hall: New York. 2000. Section 2.2.24.1
         """
-
+        img_orig = np.copy(img)
         # First subtract central luminance to calculate skewness around it
         img = img.astype(np.float64) - self.center_illuminance
 
@@ -119,19 +119,28 @@ class AutoExposure:
         skewness = np.nan_to_num(m_3 / abs(m_2) ** (3 / 2))
         if self.is_debug:
             print("   - AE - Actual_Skewness = ", skewness)
+        
+        #all integer calc
+        img_int = img_orig.astype(np.int64) - self.center_illuminance
+        img_int_size = img_int.size
+        m_2_int = np.sum(np.power(img_int, 2)).astype(np.int64)
+        m_3_int = np.sum(np.power(img_int, 3)).astype(np.int64)
+        m_2_int = np.int64(m_2_int / img_int_size)
+        m_3_int = np.int64(m_3_int / img_int_size)
+        sign_m3_int = np.sign(m_3_int)
+        #all integer calc
 
-        sign_m3 = np.sign(m_3)
+        m_2_int = m_2_int >> 6
+        m_3_int = abs(m_3_int) >> 9
 
-        m_2 = m_2 >> 6
-        m_3 = abs(m_3) >> 9
-
-        approx_sqrt_m_2 = approx_sqrt(m_2)
-        new_skewness, _ = get_approximate(m_3 / (m_2 * approx_sqrt_m_2), 16, 8)
-        new_skewness = sign_m3 * new_skewness
+        approx_sqrt_m_2_int = approx_sqrt(m_2_int)
+        new_skewness_int = np.int64((m_3_int*256) / (m_2_int * approx_sqrt_m_2_int)) / 256
+        new_skewness_int = sign_m3_int * new_skewness_int
         if self.is_debug:
-            print("   - AE - Approx_Skewness = ", new_skewness)
 
-        return new_skewness
+            print("   - AE - Approx_Skewness Int = ", new_skewness_int)
+
+        return new_skewness_int
 
     def execute(self):
         """
