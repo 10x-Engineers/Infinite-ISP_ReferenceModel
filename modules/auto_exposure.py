@@ -119,8 +119,8 @@ class AutoExposure:
         skewness = np.nan_to_num(m_3 / abs(m_2) ** (3 / 2))
         if self.is_debug:
             print("   - AE - Actual_Skewness = ", skewness)
-        
-        #all integer calc
+
+        # all integer calc
         img_int = img_orig.astype(np.int64) - self.center_illuminance
         img_int_size = img_int.size
         m_2_int = np.sum(np.power(img_int, 2)).astype(np.int64)
@@ -128,13 +128,15 @@ class AutoExposure:
         m_2_int = np.int64(m_2_int / img_int_size)
         m_3_int = np.int64(m_3_int / img_int_size)
         sign_m3_int = np.sign(m_3_int)
-        #all integer calc
+        # all integer calc
 
         m_2_int = m_2_int >> 6
         m_3_int = abs(m_3_int) >> 9
 
         approx_sqrt_m_2_int = approx_sqrt(m_2_int)
-        new_skewness_int = np.int64((m_3_int*256) / (m_2_int * approx_sqrt_m_2_int)) / 256
+        new_skewness_int = (
+            np.int64((m_3_int * 256) / (m_2_int * approx_sqrt_m_2_int)) / 256
+        )
         new_skewness_int = sign_m3_int * new_skewness_int
         if self.is_debug:
 
