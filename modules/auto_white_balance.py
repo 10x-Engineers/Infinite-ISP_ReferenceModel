@@ -34,7 +34,7 @@ class AutoWhiteBalance:
         """
         Get AWB Stats window by cropping the offsets
         """
-        offsets = self.stats_window_offset
+        offsets = np.ceil(self.stats_window_offset / 4) * 4
         top = int(offsets[0])
         bottom = None if offsets[1] == 0 else -int(offsets[1])
         left = int(offsets[2])
