@@ -191,12 +191,24 @@ class InfiniteISP:
 
         # =====================================================================
         # Sharpening
-        sharp = SHARP(csc_img, self.platform, self.sensor_info, self.parm_sha)
+        sharp = SHARP(
+            csc_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_sha,
+            self.parm_csc["conv_standard"],
+        )
         sharp_img = sharp.execute()
 
         # =====================================================================
         # 2d noise reduction
-        nr2d = NR2D(sharp_img, self.sensor_info, self.parm_2dn, self.platform)
+        nr2d = NR2D(
+            sharp_img,
+            self.sensor_info,
+            self.parm_2dn,
+            self.platform,
+            self.parm_csc["conv_standard"],
+        )
         nr2d_img = nr2d.execute()
 
         # =====================================================================
@@ -208,12 +220,24 @@ class InfiniteISP:
 
         # =====================================================================
         # crop image to 1920x1080 or 1920x1440
-        irc = IRC(rgbc_img, self.platform, self.sensor_info, self.parm_irc)
+        irc = IRC(
+            rgbc_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_irc,
+            self.parm_csc["conv_standard"],
+        )
         irc_img = irc.execute()
 
         # =====================================================================
         # Scaling
-        scale = Scale(irc_img, self.platform, self.sensor_info, self.parm_sca)
+        scale = Scale(
+            irc_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_sca,
+            self.parm_csc["conv_standard"],
+        )
         scaled_img = scale.execute()
 
         # =====================================================================

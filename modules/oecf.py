@@ -77,6 +77,7 @@ class OECF:
                 "Out_oecf_",
                 self.platform,
                 self.sensor_info["bit_depth"],
+                self.sensor_info["bayer_pattern"]
             )
 
     def execute(self):

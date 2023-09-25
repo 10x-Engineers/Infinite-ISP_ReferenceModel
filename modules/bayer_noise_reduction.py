@@ -459,6 +459,7 @@ class BayerNoiseReduction:
                 "Out_bayer_noise_reduction_",
                 self.platform,
                 self.sensor_info["bit_depth"],
+                self.sensor_info["bayer_pattern"]
             )
 
     def execute(self):

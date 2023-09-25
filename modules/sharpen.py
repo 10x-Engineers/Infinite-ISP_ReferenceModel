@@ -17,13 +17,14 @@ class Sharpening:
     Sharpening
     """
 
-    def __init__(self, img, platform, sensor_info, parm_sha):
+    def __init__(self, img, platform, sensor_info, parm_sha, conv_std):
         self.img = img
         self.enable = parm_sha["is_enable"]
         self.sensor_info = sensor_info
         self.parm_sha = parm_sha
         self.is_save = parm_sha["is_save"]
         self.platform = platform
+        self.conv_std = conv_std
 
     def gaussian_kernel(self, size_x, size_y=None, sigma_x=5, sigma_y=None):
         """
@@ -91,6 +92,7 @@ class Sharpening:
                 self.img,
                 "Out_Shapening_",
                 self.platform,
+                self.conv_std
             )
 
     def execute(self):

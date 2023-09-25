@@ -269,7 +269,9 @@ def rev_yuv(arr):
     return out_arr
 
 
-def save_output_array(img_name, output_array, module_name, platform, bitdepth):
+def save_output_array(
+    img_name, output_array, module_name, platform, bitdepth, bayer_pattern
+):
     """
     Saves output array [raw/rgb] for pipline modules
     """
@@ -290,16 +292,114 @@ def save_output_array(img_name, output_array, module_name, platform, bitdepth):
 
     if platform["save_format"] == "png" or platform["save_format"] == "both":
 
-        # convert image to 8-bit image if required
+        # for 3-channel array: convert image to 8-bit image if required
         if output_array.dtype != np.uint8 and len(output_array.shape) > 2:
             shift_by = bitdepth - 8
             output_array = (output_array >> shift_by).astype("uint8")
 
+        # for 1-channel raw: convert raw image to 8-bit rgb image
+        if len(output_array.shape) == 2:
+            output_array = raw_to_rgb(output_array, bitdepth, bayer_pattern)
         # save Image as .png
         plt.imsave(filename + ".png", output_array)
 
 
-def save_output_array_yuv(img_name, output_array, module_name, platform):
+def raw_to_rgb(raw_img, bitdepth, bayer_pattern):
+    """create a 3-channel RGB image from a 2d raw image
+    by appending zeros at unknown pixel values."""
+    shift_by = bitdepth - 8
+    raw_img = (raw_img >> shift_by).astype("uint8")
+    if bayer_pattern == "grbg":
+        # gr
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 0::2] = 1
+        gr_channel = mask * raw_img
+
+        # r
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 1::2] = 1
+        r_channel = mask * raw_img
+
+        # b
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 0::2] = 1
+        b_channel = mask * raw_img
+
+        # gb
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 1::2] = 1
+        gb_channel = mask * raw_img
+
+    if bayer_pattern == "rggb":
+        # r
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 0::2] = 1
+        r_channel = mask * raw_img
+
+        # gr
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 1::2] = 1
+        gr_channel = mask * raw_img
+
+        # gb
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 0::2] = 1
+        gb_channel = mask * raw_img
+
+        # b
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 1::2] = 1
+        b_channel = mask * raw_img
+
+    if bayer_pattern == "bggr":
+        # b
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 0::2] = 1
+        b_channel = mask * raw_img
+
+        # gb
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 1::2] = 1
+        gb_channel = mask * raw_img
+
+        # gr
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 0::2] = 1
+        gr_channel = mask * raw_img
+
+        # r
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 1::2] = 1
+        r_channel = mask * raw_img
+
+    if bayer_pattern == "gbrg":
+        # gb
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 0::2] = 1
+        gb_channel = mask * raw_img
+
+        # b
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[0::2, 1::2] = 1
+        b_channel = mask * raw_img
+
+        # r
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 0::2] = 1
+        r_channel = mask * raw_img
+
+        # gr
+        mask = np.zeros(raw_img.shape, dtype="uint8")
+        mask[1::2, 1::2] = 1
+        gr_channel = mask * raw_img
+
+    g_channel = gr_channel + gb_channel
+    rgb_array = np.stack([r_channel, g_channel, b_channel], axis=2)
+
+    return rgb_array
+
+
+def save_output_array_yuv(img_name, output_array, module_name, platform, conv_std):
     """
     Saves output array [yuv] for pipline modules
     """
@@ -325,6 +425,8 @@ def save_output_array_yuv(img_name, output_array, module_name, platform):
 
     # save image as .png
     if platform["save_format"] == "png" or platform["save_format"] == "both":
+        # cconvert the yuv image to RGB image
+        output_array = yuv_to_rgb(output_array, conv_std)
         plt.imsave(filename + ".png", output_array)
 
 
@@ -360,6 +462,44 @@ def save_pipeline_output(img_name, output_img, config_file, tv_flag):
         plt.imsave(
             OUTPUT_ARRAY_DIR + OUTPUT_DIR + img_name + dt_string + ".png", output_img
         )
+
+
+def yuv_to_rgb(yuv_img, conv_std):
+    """
+    YUV-to-RGB Colorspace conversion 8bit
+    """
+
+    # make nx3 2d matrix of image
+    mat_2d = yuv_img.reshape((yuv_img.shape[0] * yuv_img.shape[1], 3))
+
+    # convert to 3xn for matrix multiplication
+    mat2d_t = mat_2d.transpose()
+
+    # subract the offsets
+    mat2d_t = mat2d_t - np.array([[16, 128, 128]]).transpose()
+
+    if conv_std == 1:
+        # for BT. 709
+        yuv2rgb_mat = np.array([[74, 0, 114], [74, -13, -34], [74, 135, 0]])
+    else:
+        # for BT.601/407
+        # conversion metrix with 8bit integer co-efficients - m=8
+        yuv2rgb_mat = np.array([[64, 87, 0], [64, -44, -20], [61, 0, 105]])
+
+    # convert to RGB
+    rgb_2d = np.matmul(yuv2rgb_mat, mat2d_t)
+    rgb_2d = rgb_2d >> 6
+
+    # reshape the image back
+    rgb2d_t = rgb_2d.transpose()
+    yuv_img = rgb2d_t.reshape(yuv_img.shape).astype(np.float32)
+
+    # clip the resultant img as it can have neg rgb values for small Y'
+    yuv_img = np.float32(np.clip(yuv_img, 0, 255))
+
+    # convert the image to [0-255]
+    yuv_img = np.uint8(yuv_img)
+    return yuv_img
 
 
 def create_coeff_file(numbers, filename, weight_bits):

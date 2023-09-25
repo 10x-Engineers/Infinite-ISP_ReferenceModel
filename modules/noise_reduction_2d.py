@@ -20,13 +20,14 @@ class NoiseReduction2d:
     2D Noise Reduction
     """
 
-    def __init__(self, img, sensor_info, parm_2dnr, platform):
+    def __init__(self, img, sensor_info, parm_2dnr, platform, conv_std):
         self.img = img.copy()
         self.enable = parm_2dnr["is_enable"]
         self.is_save = parm_2dnr["is_save"]
         self.platform = platform
         self.sensor_info = sensor_info
         self.parm_2dnr = parm_2dnr
+        self.conv_std = conv_std
         self.is_progress = platform["disable_progress_bar"]
         self.is_leave = platform["leave_pbar_string"]
         self.save_lut = platform["save_lut"]
@@ -161,6 +162,7 @@ class NoiseReduction2d:
                 self.img,
                 "Out_2d_noise_reduction_",
                 self.platform,
+                self.conv_std
             )
 
     def execute(self):

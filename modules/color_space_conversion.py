@@ -97,6 +97,7 @@ class ColorSpaceConversion:
                 self.img,
                 "Out_color_space_conversion_",
                 self.platform,
+                self.conv_std
             )
 
     def execute(self):

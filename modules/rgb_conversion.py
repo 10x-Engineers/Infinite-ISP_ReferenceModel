@@ -85,6 +85,7 @@ class RGBConversion:
                     "Out_rgb_conversion_",
                     self.platform,
                     self.bit_depth,
+                    self.sensor_info["bayer_pattern"]
                 )
             else:
                 save_output_array_yuv(
@@ -92,6 +93,7 @@ class RGBConversion:
                     self.img,
                     "Out_rgb_conversion_",
                     self.platform,
+                    self.conv_std
                 )
 
     def execute(self):
