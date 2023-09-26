@@ -30,6 +30,7 @@ from modules.invalid_region_crop import InvalidRegionCrop as IRC
 from modules.scale import Scale
 from modules.crop import Crop
 from modules.auto_exposure import AutoExposure as AE
+from modules.on_screen_display import OnScreenDisplay as OSD
 
 
 class InfiniteISP:
@@ -80,6 +81,7 @@ class InfiniteISP:
         self.parm_irc = c_yaml["invalid_region_crop"]
         self.parm_sca = c_yaml["scale"]
         self.parm_yuv = c_yaml["yuv_conversion_format"]
+        self.parm_osd = c_yaml["on_screen_display"]
         self.c_yaml = c_yaml
 
         self.platform["rgb_output"] = self.parm_rgb["is_enable"]
@@ -205,8 +207,13 @@ class InfiniteISP:
         irc_img = irc.execute()
 
         # =====================================================================
+        # on-screen display for 10xEngineers logo
+        osd = OSD(irc_img, self.platform, self.sensor_info, self.parm_osd)
+        osd_img = osd.execute()
+
+        # =====================================================================
         # Scaling
-        scale = Scale(irc_img, self.platform, self.sensor_info, self.parm_sca)
+        scale = Scale(osd_img, self.platform, self.sensor_info, self.parm_sca)
         scaled_img = scale.execute()
 
         # =====================================================================
