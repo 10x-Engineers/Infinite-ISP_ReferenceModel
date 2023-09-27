@@ -208,7 +208,7 @@ class InfiniteISP:
 
         # =====================================================================
         # on-screen display for 10xEngineers logo
-        osd = OSD(irc_img, self.platform, self.sensor_info, self.parm_osd)
+        osd = OSD(irc_img, self.platform, self.sensor_info, self.parm_osd, self.parm_csc)
         osd_img = osd.execute()
 
         # =====================================================================

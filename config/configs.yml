@@ -131,7 +131,7 @@ color_space_conversion:
   is_save: false
 
 rgb_conversion:
-  is_enable: true
+  is_enable: false
   is_save: false
 
 invalid_region_crop:
@@ -153,8 +153,8 @@ on_screen_display:
 scale:
   is_enable: false
   is_debug: true
-  new_width: 960
-  new_height: 720
+  new_width: 640
+  new_height: 360
   is_save: false
 
 yuv_conversion_format:
