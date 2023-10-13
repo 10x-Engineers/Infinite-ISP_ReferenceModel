@@ -292,14 +292,15 @@ def save_output_array(
 
     if platform["save_format"] == "png" or platform["save_format"] == "both":
 
-        # for 3-channel array: convert image to 8-bit image if required
-        if output_array.dtype != np.uint8 and len(output_array.shape) > 2:
+        # for 1-channel raw: convert raw image to rgb image
+        if len(output_array.shape) == 2:
+            output_array = apply_cfa(output_array, bitdepth, bayer_pattern)
+        
+        # convert image to 8-bit image if required
+        if output_array.dtype != np.uint8:
             shift_by = bitdepth - 8
             output_array = (output_array >> shift_by).astype("uint8")
 
-        # for 1-channel raw: convert raw image to 8-bit rgb image
-        if len(output_array.shape) == 2:
-            output_array = apply_cfa(output_array, 8, bayer_pattern)
         # save Image as .png
         plt.imsave(filename + ".png", output_array)
 
@@ -476,7 +477,7 @@ def apply_cfa(img, bit_depth, bayer):
 
     # Clipping the pixels values within the bit range
     demos_out = np.clip(demos_out, 0, 2**bit_depth - 1)
-    demos_out = np.uint8(demos_out)
+    demos_out = np.uint16(demos_out)
     return demos_out
 
 
