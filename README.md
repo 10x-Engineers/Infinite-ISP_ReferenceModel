@@ -1,18 +1,18 @@
 # Infinite-ISP
-Infinite-ISP is a one stop solution for all your ISP development needs - from algorithms to an FPGA prototype and associated firmware, tools, etc. Its primary goal is to offer a unified platform that empowers ISP developers to accelerate ISP innovation. It includes a complete collection of camera pipeline modules written in Python, an FPGA bit-stream & the associated firmware for the implementation of the pipeline on the Kria KV260 development board and lastly a stand-alone Python based Tuning tool application for the pipeline.  The main components of the Infinite-ISP project are listed below:
+Infinite-ISP is a one stop solution for all your ISP development needs - from algorithms to an FPGA prototype and associated firmware, tools, etc. Its primary goal is to offer a unified platform that empowers ISP developers to accelerate ISP innovation. It includes a complete collection of camera pipeline modules written in Python, FPGA binaries & the associated firmware for the implementation of the pipeline on the Kria KV260 development board and lastly a stand-alone Python based Tuning tool application for the pipeline.  The main components of the Infinite-ISP project are listed below:
 
 | Repository name        | Description      | 
 | -------------  | ------------- |
 | **[Infinite-ISP_AlgorithmDesign](https://github.com/xx-isp/infinite-isp)**                        | Python based model of the Infinite-ISP pipeline for algorithm development |
 | **[Infinite-ISP_ReferenceModel](https://github.com/10xEngineersTech/Infinite-ISP_ReferenceModel)** :anchor:                        | Python based fixed-point model of the Infinite-ISP pipeline for hardware implementation |
-| **[Infinite-ISP_FPGABitstream](https://github.com/10xEngineersTech/Infinite-ISP_FPGABitstream)**                                      | FPGA bit-stream for the  Kria kV260’s Xilinx® ZU5EV Ultrascale FPGA|
+| **[Infinite-ISP_FPGABinaries](https://github.com/10xEngineersTech/Infinite-ISP_FPGABitstream)**                                      | FPGA binaries (bitstream + firmware executable) for the Xilinx® Kria KV260’s XCK26 Zynq UltraScale+ MPSoCA|
 | **[Infinite-ISP_Firmware](https://github.com/10xEngineersTech/Infinite-ISP_Firmware)**                                      | Firmware for the Kria kV260’s embedded Arm® Cortex®A53 processor|
-| **[Infinite-ISP_Tuning Tool](https://github.com/10xEngineersTech/Infinite-ISP_TuningTool)**                              | Collection of calibration and analysis tools for the Infinite-ISP |
+| **[Infinite-ISP_TuningTool](https://github.com/10xEngineersTech/Infinite-ISP_TuningTool)**                              | Collection of calibration and analysis tools for the Infinite-ISP |
 
-# Infinite-ISP_ReferenceModel: A Python-based Model for RTL Implementation of Camera Pipeline Modules
+# Infinite-ISP Reference Model: A Python-based Model for RTL Implementation of Camera Pipeline Modules
 
 ## Overview
-Infinite-ISP_ReferenceModel is a Python based fixed-point implementation of Infinite-ISP pipeline. It is a comprehensive collection of camera pipeline modules, designed to convert input RAW images from sensors to output RGB images. The model provides a reference implementation that aids in generating RTL code enabling rigorous testing, verification, and validation of the pipeline's functionality and behavior.
+Infinite-ISP Reference Model is a Python based fixed-point implementation of Infinite-ISP pipeline. It is a comprehensive collection of camera pipeline modules, designed to convert input RAW images from sensors to output RGB images. The model provides a reference implementation that aids in generating RTL code enabling rigorous testing, verification, and validation of the pipeline's functionality and behavior.
 
 This model uses lookup tables for complex functions like Gaussian and Sigmoid, applies fixed-point numbers or custom approximations for divisions and square roots, optimizing for minimum loss in image quality.
 
