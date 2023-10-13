@@ -12,7 +12,7 @@ Infinite-ISP is a one stop solution for all your ISP development needs - from al
 # Infinite-ISP_ReferenceModel: A Python-based Model for RTL Implementation of Camera Pipeline Modules
 
 ## Overview
-Infinite-ISP_ReferenceModel is a Python based fixed-point implementation of Infinite-ISP pipeline. It is a comprehensive collection of camera pipeline modules, designed to convert input RAW images from sensors to output RGB images. The model provides a reference implementation that aids in generating RTL code enabling rigorous testing, verification, and validation of the pipeline's functionality and behavior.
+Infinite-ISP Reference Model is a Python based fixed-point implementation of Infinite-ISP pipeline. It is a comprehensive collection of camera pipeline modules, designed to convert input RAW images from sensors to output RGB images. The model provides a reference implementation that aids in generating RTL code enabling rigorous testing, verification, and validation of the pipeline's functionality and behavior.
 
 This model uses lookup tables for complex functions like Gaussian and Sigmoid, applies fixed-point numbers or custom approximations for divisions and square roots, optimizing for minimum loss in image quality.
 
