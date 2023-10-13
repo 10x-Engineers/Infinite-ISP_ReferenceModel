@@ -36,4 +36,4 @@ jobs:
           done
         else
           echo "No Python files have been changed."
-    fi
+        fi
