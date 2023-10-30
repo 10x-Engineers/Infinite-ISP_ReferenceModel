@@ -31,9 +31,9 @@ ISP pipeline for `InfiniteISP_ReferenceModel v1.0`
 
 3. **Dataset Processing**: The model facilitates execution for multiple images with different or same configuration files.
 
-4. **Video Processing**: The model also features a video processing script that allows for sequential frame processing, with operational 3A Statistics data flowing between frames.
+4. **Video Processing**: The model also includes a video processing feature that allows for sequential frame processing, with operational 3A Statistics data flowing between frames.
 
-
+5. **Support Multiple RAW formats**: The model supports renowned raw formats, for example, DNG (predominantly employed by Android devices), NEF (specific to Nikon devices), and CR2 (Canon's signature format). It can also process the .raw  image format, a one-dimensional pixel data array with no metadata header.
 
 ## Objectives
 
@@ -59,6 +59,7 @@ The table below provides a feature list of the model. The version `1.0` of the m
 | Gamma Correction             |Implements a LUT from config |
 | Auto Exposure                                 | [Auto Exposure](https://www.atlantis-press.com/article/25875811.pdf) <br> - AE stats calculations based on skewness |
 | Color Space Conversion                        | YCbCr digital <br> - BT 601 <br> - Bt 709  <br>   |YCbCr digital <br> - BT 601 <br> - Bt 709  <br> |
+| Edge Enhancement / Sharpening                | Simple unsharp masking with strength control| 
 | Noise Reduction                               | [Non-local means filter](https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf) <br> - Implements intensity level difference  through a LUT|
 | RGB Conversion                               | Converts YCbCr digital image to RGB|
 | Invalid Region Crop    | Crops image to a fixed size|
@@ -103,19 +104,20 @@ RAW_DATA = './in_frames/normal/data'
 
 ## How to Run on Pipeline on Multiple Images/Dataset
 
-There are two scripts that run Infinite-ISP on multiple images:
+There is another script [isp_pipeline_multiple_images.py](isp_pipeline_multiple_images.py) that runs Infinite-ISP on multiple images with two modes:
 
 
-1. [isp_pipeline_dataset.py](isp_pipeline_dataset.py) 
+1. DATASET PROCESSING
     <br >Execute multiple images. Raw image should have its own config file with name `<filename>-configs.yml` where `<filename>` is raw filename otherwise the default configuration file [configs.yml](config/configs.yml) is used.
 
+    For raw image format such as, NEF, DNG and CR2 we have also provided a funcationality to extract sensor information provided in these raw files metadata and update default config file.
 
-2. [video_processing.py](video_processing.py) 
-   <br> Each image in the dataset is considered as video frame in sequence. All images use the same configuration parameters from [configs.yml](config/configs.yml) and 3A Stats calculated on a frame are applied to the next frame.
+2. VIDEO MODE
+   <br> Each image in the dataset is considered as video frame in sequence. All images use the same configuration parameters from [configs.yml](config/configs.yml) and 3A stats calculated on a frame are applied to the next frame.
 
 After cloning the repository and installing all the dependencies follow the following steps:
 
-1.  Set `DATASET_PATH` to dataset folder. For example if images are in in [in_frames/normal/data](in_frames/normal/data) folder
+1.  Set `DATASET_PATH` to dataset folder. For example if images are in [in_frames/normal/data](in_frames/normal/data) folder
 ```python
 DATASET_PATH = './in_frames/normal/data'
 ```
@@ -124,17 +126,17 @@ DATASET_PATH = './in_frames/normal/data'
 
 ```shell
 git submodule add <url> <path>
-git submodule update –-init –-recursive
+git submodule update --init --recursive
 ``` 
 
 
-4. After adding git repository as a submodule update `DATASET_PATH` variable in [isp_pipeline_dataset.py](isp_pipeline_dataset.py) to `./in_frames/normal/<dataset_name>`. Git does not allow to import a repository’s subfolder using a submodule. You can only add an entire repository and then access the folder. If you want to use images from a subfolder of a submodule modify the `DATASET_PATH` variable in [isp_pipeline_dataset.py](isp_pipeline_dataset.py)  or [video_processing.py](video_processing.py)  accordingly.
+4. After adding git repository as a submodule update `DATASET_PATH` variable in [isp_pipeline_multiple_images.py ](isp_pipeline_multiple_images.py ) to `./in_frames/normal/<dataset_name>`. Git does not allow to import a repository’s subfolder using a submodule. You can only add an entire repository and then access the folder. If you want to use images from a subfolder of a submodule modify the `DATASET_PATH` variable in [isp_pipeline_multiple_images.py](isp_pipeline_multiple_images.py)  accordingly.
 
 ```python
 DATASET_PATH = './in_frames/normal/<dataset_name>'
 ```
 
-5. Run `isp_pipeline_dataset.py` or `video_processing.py`
+5. Run `isp_pipeline_multiple_images.py`
 6. The processed images are saved in [out_frames](out_frames/) folder.
 
 ## Test Vector Generation
