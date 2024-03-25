@@ -64,6 +64,7 @@ class GammaCorrection:
                 "Out_gamma_correction_",
                 self.platform,
                 self.sensor_info["bit_depth"],
+                self.sensor_info["bayer_pattern"]
             )
 
     def execute(self):

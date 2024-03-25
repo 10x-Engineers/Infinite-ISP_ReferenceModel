@@ -110,6 +110,7 @@ class Crop:
                 filename_tag,
                 self.platform,
                 self.sensor_info["bit_depth"],
+                self.sensor_info["bayer_pattern"]
             )
 
     def execute(self):

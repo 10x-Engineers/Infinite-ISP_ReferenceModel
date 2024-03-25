@@ -22,7 +22,7 @@ class InvalidRegionCrop:
     as the input image.
     """
 
-    def __init__(self, img, platform, sensor_info, parm_irc):
+    def __init__(self, img, platform, sensor_info, parm_irc, conv_std):
         self.img = img.copy()
         self.enable = parm_irc["is_enable"]
         self.platform = platform
@@ -31,6 +31,7 @@ class InvalidRegionCrop:
         self.parm_irc = parm_irc
         self.bit_depth = sensor_info["bit_depth"]
         self.sensor_info = sensor_info
+        self.conv_std = conv_std
         self.is_valid = False
 
     def get_idx_for_rtl(self):
@@ -153,6 +154,7 @@ class InvalidRegionCrop:
                     "Out_invalid_region_crop_",
                     self.platform,
                     self.bit_depth,
+                    self.sensor_info["bayer_pattern"]
                 )
             else:
                 save_output_array_yuv(
@@ -160,6 +162,7 @@ class InvalidRegionCrop:
                     self.img,
                     "Out_invalid_region_crop_",
                     self.platform,
+                    self.conv_std
                 )
 
     def execute(self):

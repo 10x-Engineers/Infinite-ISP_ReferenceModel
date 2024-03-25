@@ -269,7 +269,9 @@ def rev_yuv(arr):
     return out_arr
 
 
-def save_output_array(img_name, output_array, module_name, platform, bitdepth):
+def save_output_array(
+    img_name, output_array, module_name, platform, bitdepth, bayer_pattern
+):
     """
     Saves output array [raw/rgb] for pipline modules
     """
@@ -290,8 +292,12 @@ def save_output_array(img_name, output_array, module_name, platform, bitdepth):
 
     if platform["save_format"] == "png" or platform["save_format"] == "both":
 
+        # for 1-channel raw: convert raw image to rgb image
+        if len(output_array.shape) == 2:
+            output_array = apply_cfa(output_array, bitdepth, bayer_pattern)
+        
         # convert image to 8-bit image if required
-        if output_array.dtype != np.uint8 and len(output_array.shape) > 2:
+        if output_array.dtype != np.uint8:
             shift_by = bitdepth - 8
             output_array = (output_array >> shift_by).astype("uint8")
 
@@ -299,7 +305,183 @@ def save_output_array(img_name, output_array, module_name, platform, bitdepth):
         plt.imsave(filename + ".png", output_array)
 
 
-def save_output_array_yuv(img_name, output_array, module_name, platform):
+def masks_cfa_bayer(img, bayer):
+    """
+    Generating masks for the given bayer pattern
+    """
+
+    # dict will be creating 3 channel boolean type array of given shape with the name
+    # tag like 'r_channel': [False False ....] , 'g_channel': [False False ....] ,
+    # 'b_channel': [False False ....]
+    channels = dict(
+        (channel, np.zeros(img.shape, dtype=bool)) for channel in "rgb"
+    )
+
+    # Following comment will create boolean masks for each channel r_channel,
+    # g_channel and b_channel
+    for channel, (y_channel, x_channel) in zip(
+        bayer, [(0, 0), (0, 1), (1, 0), (1, 1)]
+    ):
+        channels[channel][y_channel::2, x_channel::2] = True
+
+    # tuple will return 3 channel boolean pattern for r_channel,
+    # g_channel and b_channel with True at corresponding value
+    # For example in rggb pattern, the r_channel mask would then be
+    # [ [ True, False, True, False], [ False, False, False, False]]
+    return tuple(channels[c] for c in "rgb")
+
+def apply_cfa(img, bit_depth, bayer):
+    """
+    Demosaicing the given raw image
+    """
+    # 3D masks accoridng to the given bayer
+    mask_r, mask_g, mask_b = masks_cfa_bayer(img, bayer)
+    raw_in = np.float32(img)
+
+    # Declaring 3D Demosaiced image
+    demos_out = np.empty((raw_in.shape[0], raw_in.shape[1], 3))
+
+    # 5x5 2D Filter coefficients for linear interpolation of
+    # r_channel,g_channel and b_channel channels
+    # These filters helps to retain corresponding pixels information using
+    # laplacian while interpolation
+
+    # g_channel at r_channel & b_channel location,
+    g_at_r_and_b = (
+        np.float32(
+            [
+                [0, 0, -1, 0, 0],
+                [0, 0, 2, 0, 0],
+                [-1, 2, 4, 2, -1],
+                [0, 0, 2, 0, 0],
+                [0, 0, -1, 0, 0],
+            ]
+        )
+        * 0.125
+    )
+
+    # r_channel at green in r_channel row & b_channel column --
+    # b_channel at green in b_channel row & r_channel column
+    r_at_gr_and_b_at_gb = (
+        np.float32(
+            [
+                [0, 0, 0.5, 0, 0],
+                [0, -1, 0, -1, 0],
+                [-1, 4, 5, 4, -1],
+                [0, -1, 0, -1, 0],
+                [0, 0, 0.5, 0, 0],
+            ]
+        )
+        * 0.125
+    )
+
+    # r_channel at green in b_channel row & r_channel column --
+    # b_channel at green in r_channel row & b_channel column
+    r_at_gb_and_b_at_gr = np.transpose(r_at_gr_and_b_at_gb)
+
+    # r_channel at blue in b_channel row & b_channel column --
+    # b_channel at red in r_channel row & r_channel column
+    r_at_b_and_b_at_r = (
+        np.float32(
+            [
+                [0, 0, -1.5, 0, 0],
+                [0, 2, 0, 2, 0],
+                [-1.5, 0, 6, 0, -1.5],
+                [0, 2, 0, 2, 0],
+                [0, 0, -1.5, 0, 0],
+            ]
+        )
+        * 0.125
+    )
+
+    # Creating r_channel, g_channel & b_channel channels from raw_in
+    r_channel = raw_in * mask_r
+    g_channel = raw_in * mask_g
+    b_channel = raw_in * mask_b
+
+    # Creating g_channel channel first after applying g_at_r_and_b filter
+    g_channel = np.where(
+        np.logical_or(mask_r == 1, mask_b == 1),
+        correlate2d(raw_in, g_at_r_and_b, mode="same", boundary="symm"),
+        g_channel,
+    )
+
+    # Applying other linear filters
+    rb_at_g_rbbr = correlate2d(
+        raw_in, r_at_gr_and_b_at_gb, mode="same", boundary="symm"
+    )
+    rb_at_g_brrb = correlate2d(
+        raw_in, r_at_gb_and_b_at_gr, mode="same", boundary="symm"
+    )
+    rb_at_gr_bbrr = correlate2d(
+        raw_in, r_at_b_and_b_at_r, mode="same", boundary="symm"
+    )
+
+    # After convolving the input raw image with rest of the filters,
+    # now we have the respective interpolated data, now we just have
+    # to extract the updated pixels values according to the
+    # position they are meant to be updated
+
+    # Extracting Red rows.
+    r_rows = np.transpose(np.any(mask_r == 1, axis=1)[np.newaxis]) * np.ones(
+        r_channel.shape, dtype=np.float32
+    )
+
+    # Extracting Red columns.
+    r_col = np.any(mask_r == 1, axis=0)[np.newaxis] * np.ones(
+        r_channel.shape, dtype=np.float32
+    )
+
+    # Extracting Blue rows.
+    b_rows = np.transpose(np.any(mask_b == 1, axis=1)[np.newaxis]) * np.ones(
+        b_channel.shape, dtype=np.float32
+    )
+
+    # Extracting Blue columns
+    b_col = np.any(mask_b == 1, axis=0)[np.newaxis] * np.ones(
+        b_channel.shape, dtype=np.float32
+    )
+
+    # For R channel we have to update pixels at [r_channel rows
+    # and b_channel cols] & at [b_channel rows and r_channel cols]
+    # 3 pixels need to be updated near one given r_channel
+    r_channel = np.where(
+        np.logical_and(r_rows == 1, b_col == 1), rb_at_g_rbbr, r_channel
+    )
+    r_channel = np.where(
+        np.logical_and(b_rows == 1, r_col == 1), rb_at_g_brrb, r_channel
+    )
+
+    # Similarly for B channel we have to update pixels at
+    # [r_channel rows and b_channel cols]
+    # & at [b_channel rows and r_channel cols] 3 pixels need
+    # to be updated near one given b_channel
+    b_channel = np.where(
+        np.logical_and(b_rows == 1, r_col == 1), rb_at_g_rbbr, b_channel
+    )
+    b_channel = np.where(
+        np.logical_and(r_rows == 1, b_col == 1), rb_at_g_brrb, b_channel
+    )
+
+    # Final r_channel & b_channel channels
+    r_channel = np.where(
+        np.logical_and(b_rows == 1, b_col == 1), rb_at_gr_bbrr, r_channel
+    )
+    b_channel = np.where(
+        np.logical_and(r_rows == 1, r_col == 1), rb_at_gr_bbrr, b_channel
+    )
+
+    demos_out[:, :, 0] = r_channel
+    demos_out[:, :, 1] = g_channel
+    demos_out[:, :, 2] = b_channel
+
+    # Clipping the pixels values within the bit range
+    demos_out = np.clip(demos_out, 0, 2**bit_depth - 1)
+    demos_out = np.uint16(demos_out)
+    return demos_out
+
+
+def save_output_array_yuv(img_name, output_array, module_name, platform, conv_std):
     """
     Saves output array [yuv] for pipline modules
     """
@@ -325,6 +507,8 @@ def save_output_array_yuv(img_name, output_array, module_name, platform):
 
     # save image as .png
     if platform["save_format"] == "png" or platform["save_format"] == "both":
+        # cconvert the yuv image to RGB image
+        output_array = yuv_to_rgb(output_array, conv_std)
         plt.imsave(filename + ".png", output_array)
 
 
@@ -360,6 +544,44 @@ def save_pipeline_output(img_name, output_img, config_file, tv_flag):
         plt.imsave(
             OUTPUT_ARRAY_DIR + OUTPUT_DIR + img_name + dt_string + ".png", output_img
         )
+
+
+def yuv_to_rgb(yuv_img, conv_std):
+    """
+    YUV-to-RGB Colorspace conversion 8bit
+    """
+
+    # make nx3 2d matrix of image
+    mat_2d = yuv_img.reshape((yuv_img.shape[0] * yuv_img.shape[1], 3))
+
+    # convert to 3xn for matrix multiplication
+    mat2d_t = mat_2d.transpose()
+
+    # subract the offsets
+    mat2d_t = mat2d_t - np.array([[16, 128, 128]]).transpose()
+
+    if conv_std == 1:
+        # for BT. 709
+        yuv2rgb_mat = np.array([[74, 0, 114], [74, -13, -34], [74, 135, 0]])
+    else:
+        # for BT.601/407
+        # conversion metrix with 8bit integer co-efficients - m=8
+        yuv2rgb_mat = np.array([[64, 87, 0], [64, -44, -20], [61, 0, 105]])
+
+    # convert to RGB
+    rgb_2d = np.matmul(yuv2rgb_mat, mat2d_t)
+    rgb_2d = rgb_2d >> 6
+
+    # reshape the image back
+    rgb2d_t = rgb_2d.transpose()
+    yuv_img = rgb2d_t.reshape(yuv_img.shape).astype(np.float32)
+
+    # clip the resultant img as it can have neg rgb values for small Y'
+    yuv_img = np.float32(np.clip(yuv_img, 0, 255))
+
+    # convert the image to [0-255]
+    yuv_img = np.uint8(yuv_img)
+    return yuv_img
 
 
 def create_coeff_file(numbers, filename, weight_bits):

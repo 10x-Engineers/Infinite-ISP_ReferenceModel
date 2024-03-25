@@ -61,6 +61,7 @@ class ColorCorrectionMatrix:
                 "Out_color_correction_matrix_",
                 self.platform,
                 self.bit_depth,
+                self.sensor_info["bayer_pattern"]
             )
 
     def execute(self):

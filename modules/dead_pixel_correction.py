@@ -438,6 +438,7 @@ class DeadPixelCorrection:
                 "Out_dead_pixel_correction_",
                 self.platform,
                 self.bpp,
+                self.sensor_info["bayer_pattern"]
             )
 
     def execute(self):

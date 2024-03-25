@@ -75,6 +75,7 @@ class YUVConvFormat:
                 f"Out_yuv_conversion_format_{self.param_yuv['conv_type']}_",
                 self.platform,
                 self.sensor_info["bit_depth"],
+                self.sensor_info["bayer_pattern"]
             )
             # restore the original save format
             self.platform["save_format"] = save_format

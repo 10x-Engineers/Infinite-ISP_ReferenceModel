@@ -15,12 +15,13 @@ from util.utils import crop, stride_convolve2d, save_output_array, save_output_a
 class Scale:
     """Scale color image to given size."""
 
-    def __init__(self, img, platform, sensor_info, parm_sca):
+    def __init__(self, img, platform, sensor_info, parm_sca, conv_std):
         self.img = img.copy()
         self.enable = parm_sca["is_enable"]
         self.is_save = parm_sca["is_save"]
         self.sensor_info = sensor_info
         self.platform = platform
+        self.conv_std = conv_std
         self.parm_sca = parm_sca
         self.get_scaling_params()
 
@@ -81,6 +82,7 @@ class Scale:
                     "Out_scale_",
                     self.platform,
                     self.sensor_info["bit_depth"],
+                    self.sensor_info["bayer_pattern"]
                 )
             else:
                 save_output_array_yuv(
@@ -88,6 +90,7 @@ class Scale:
                     self.img,
                     "Out_scale_",
                     self.platform,
+                    self.conv_std
                 )
 
     def execute(self):
