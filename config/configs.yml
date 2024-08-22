@@ -3,8 +3,6 @@ platform:
   disable_progress_bar: false
   leave_pbar_string: false
   save_lut: false
-  generate_tv: false
-  rev_yuv_channels: false
   save_format: npy
   # png # npy # both
   render_3a: false

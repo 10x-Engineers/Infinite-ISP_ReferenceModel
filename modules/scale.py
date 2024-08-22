@@ -9,19 +9,20 @@ Author: 10xEngineers Pvt Ltd
 import time
 import re
 import numpy as np
-from util.utils import crop, stride_convolve2d, save_output_array, save_output_array_yuv
+from util.utils import crop, stride_convolve2d
 
 
 class Scale:
     """Scale color image to given size."""
 
-    def __init__(self, img, platform, sensor_info, parm_sca):
+    def __init__(self, img, platform, sensor_info, parm_sca, save_out_obj):
         self.img = img.copy()
         self.enable = parm_sca["is_enable"]
         self.is_save = parm_sca["is_save"]
         self.sensor_info = sensor_info
         self.platform = platform
         self.parm_sca = parm_sca
+        self.save_out_obj = save_out_obj
         self.get_scaling_params()
 
     def apply_scaling(self):
@@ -39,7 +40,6 @@ class Scale:
 
         # Loop over each channel to resize the image
         for i in range(3):
-
             ch_arr = self.img[:, :, i]
             scale_2d = Scale2D(ch_arr, self.sensor_info, self.parm_sca)
             scaled_ch = scale_2d.execute()
@@ -75,7 +75,7 @@ class Scale:
         )
         if self.is_save:
             if self.platform["rgb_output"]:
-                save_output_array(
+                self.save_out_obj.save_output_array(
                     self.platform["in_file"],
                     self.img,
                     "Out_scale_",
@@ -83,7 +83,7 @@ class Scale:
                     self.sensor_info["bit_depth"],
                 )
             else:
-                save_output_array_yuv(
+                self.save_out_obj.save_output_array_yuv(
                     self.platform["in_file"],
                     self.img,
                     "Out_scale_",
@@ -114,7 +114,6 @@ class Scale2D:
         self.get_scaling_params()
 
     def fast_nearest_neighbor(self, new_size):
-
         """Down scale by an integer factor using NN method using convolution."""
 
         old_height, old_width = (
@@ -133,7 +132,6 @@ class Scale2D:
         return scaled_img
 
     def scale_nearest_neighbor(self, new_size):
-
         """
         Upscale/Downscale 2D array by any scale factor using Nearest Neighbor (NN) algorithm.
         """
@@ -163,7 +161,6 @@ class Scale2D:
         return self.apply_algo(scale_info)
 
     def apply_algo(self, scale_info):
-
         """
         Scale 2D array using hardware friendly approach comprising of 2 steps:
            1. Downscale with int factor
@@ -186,7 +183,6 @@ class Scale2D:
         else:
             # step 1: Downscale by int fcator
             if scale_info[0][0] > 1 or scale_info[1][0] > 1:
-
                 self.single_channel = self.fast_nearest_neighbor(
                     (
                         self.old_size[0] // scale_info[0][0],

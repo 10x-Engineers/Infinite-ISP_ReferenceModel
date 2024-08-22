@@ -14,7 +14,6 @@ Code / Paper  Reference: https://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.709_conver
 
 import time
 import numpy as np
-from util.utils import save_output_array_yuv, save_output_array
 
 
 class RGBConversion:
@@ -22,7 +21,7 @@ class RGBConversion:
     YUV to RGB Conversion
     """
 
-    def __init__(self, img, platform, sensor_info, parm_rgb, parm_csc):
+    def __init__(self, img, platform, sensor_info, parm_rgb, parm_csc, save_out_obj):
         self.img = img.copy()
         self.platform = platform
         self.sensor_info = sensor_info
@@ -33,6 +32,7 @@ class RGBConversion:
         self.conv_std = parm_csc["conv_standard"]
         self.yuv_img = img
         self.yuv2rgb_mat = None
+        self.save_out_obj = save_out_obj
 
     def yuv_to_rgb(self):
         """
@@ -55,8 +55,8 @@ class RGBConversion:
             self.yuv2rgb_mat = np.array([[74, 0, 114], [74, -13, -34], [74, 135, 0]])
         else:
             # for BT.601/407
-            # conversion metrix with 8bit integer co-efficients - m=8
-            self.yuv2rgb_mat = np.array([[64, 87, 0], [64, -44, -20], [61, 0, 105]])
+            # conversion metrix with 8bit integer co-efficients - m=6
+            self.yuv2rgb_mat = np.array([[64, 0, 87], [64, -20, -44], [61, 105, 0]])
 
         # convert to RGB
         rgb_2d = np.matmul(self.yuv2rgb_mat, mat2d_t)
@@ -79,7 +79,7 @@ class RGBConversion:
         """
         if self.is_save:
             if self.enable:
-                save_output_array(
+                self.save_out_obj.save_output_array(
                     self.platform["in_file"],
                     self.img,
                     "Out_rgb_conversion_",
@@ -87,7 +87,7 @@ class RGBConversion:
                     self.bit_depth,
                 )
             else:
-                save_output_array_yuv(
+                self.save_out_obj.save_output_array_yuv(
                     self.platform["in_file"],
                     self.img,
                     "Out_rgb_conversion_",

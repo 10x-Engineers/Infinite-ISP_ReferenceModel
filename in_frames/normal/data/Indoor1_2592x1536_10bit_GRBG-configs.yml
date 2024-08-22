@@ -3,8 +3,6 @@ platform:
   disable_progress_bar: False
   leave_pbar_string: False
   save_lut: false
-  generate_tv: false
-  rev_yuv_channels: false
   save_format: npy
   # png # npy # both
   render_3a: true
@@ -143,6 +141,18 @@ invalid_region_crop:
   width_start_idx: 6
   is_debug: true
   is_save: False
+
+on_screen_display:
+  is_enable: false
+  is_debug: false
+  height: 64
+  width: 128
+  x_offset: 50
+  y_offset: 50
+  fg_color: [0, 90, 160]
+  bg_color: [255, 255, 255]
+  alpha: 50
+  is_save: false
 
 scale:
   is_enable: False

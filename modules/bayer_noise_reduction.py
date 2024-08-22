@@ -12,7 +12,7 @@ import warnings
 import os
 import numpy as np
 from scipy import ndimage
-from util.utils import create_coeff_file, save_output_array
+from util.utils import create_coeff_file
 
 
 class BayerNoiseReduction:
@@ -20,7 +20,7 @@ class BayerNoiseReduction:
     Noise Reduction in Bayer domain
     """
 
-    def __init__(self, img, platform, sensor_info, parm_bnr):
+    def __init__(self, img, platform, sensor_info, parm_bnr, save_out_obj):
         self.img = img.copy()
         self.enable = parm_bnr["is_enable"]
         self.is_save = parm_bnr["is_save"]
@@ -30,6 +30,7 @@ class BayerNoiseReduction:
         self.is_progress = platform["disable_progress_bar"]
         self.is_leave = platform["leave_pbar_string"]
         self.save_lut = platform["save_lut"]
+        self.save_out_obj = save_out_obj
 
     def apply_bnr(self):
         """
@@ -60,12 +61,8 @@ class BayerNoiseReduction:
         # in_img = np.float32(in_img) / (2 ** bit_depth - 1)
 
         interp_g = np.zeros((height, width), dtype=np.int16)
-        in_img_r = np.zeros(
-            (int(height / 2), int(width / 2)), dtype=np.int16
-        )
-        in_img_b = np.zeros(
-            (int(height / 2), int(width / 2)), dtype=np.int16
-        )
+        in_img_r = np.zeros((int(height / 2), int(width / 2)), dtype=np.int16)
+        in_img_b = np.zeros((int(height / 2), int(width / 2)), dtype=np.int16)
 
         # convert bayer image into sub-images for filtering each colour ch
         in_img_raw = in_img.copy()
@@ -124,12 +121,8 @@ class BayerNoiseReduction:
         kern_filt_g_at_b = np.clip(kern_filt_g_at_b, 0, 2**bit_depth - 1)
 
         interp_g = in_img.copy()
-        interp_g_at_r = np.zeros(
-            (int(height / 2), int(width / 2)), dtype=np.int16
-        )
-        interp_g_at_b = np.zeros(
-            (int(height / 2), int(width / 2)), dtype=np.int16
-        )
+        interp_g_at_r = np.zeros((int(height / 2), int(width / 2)), dtype=np.int16)
+        interp_g_at_b = np.zeros((int(height / 2), int(width / 2)), dtype=np.int16)
 
         if bayer_pattern == "rggb":
             # extract R and B location Green pixels to form interpG image
@@ -453,7 +446,7 @@ class BayerNoiseReduction:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 "Out_bayer_noise_reduction_",

@@ -27,7 +27,6 @@ def extract_raw_metadata(filename):
     Extract Exif/Metadata Information from Raw File
     """
     with rawpy.imread(filename) as raw:
-
         # Get the Bayer pattern
         # The pattern is returned as a 2D numpy array, where 0=red, 1=green, 2=blue
         bayer_array = raw.raw_pattern

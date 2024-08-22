@@ -8,19 +8,19 @@ Author: 10xEngineers Pvt Ltd
 import time
 import numpy as np
 from scipy.signal import correlate2d
-from util.utils import save_output_array
 
 
 class Demosaic:
     "CFA Interpolation - Demaosicing"
 
-    def __init__(self, img, platform, sensor_info, parm_dem):
+    def __init__(self, img, platform, sensor_info, parm_dem, save_out_obj):
         self.img = img.copy()
         self.is_save = parm_dem["is_save"]
         self.platform = platform
         self.sensor_info = sensor_info
         self.bayer = sensor_info["bayer_pattern"]
         self.bit_depth = sensor_info["bit_depth"]
+        self.save_out_obj = save_out_obj
 
     def masks_cfa_bayer(self):
         """
@@ -203,7 +203,7 @@ class Demosaic:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 "Out_demosaic_",

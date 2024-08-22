@@ -16,7 +16,6 @@ class AutoWhiteBalance:
     """
 
     def __init__(self, raw, sensor_info, parm_awb):
-
         self.raw = raw
 
         self.sensor_info = sensor_info
@@ -48,20 +47,23 @@ class AutoWhiteBalance:
 
         self.raw = self.apply_window_offset_crop()
 
-        max_pixel_value = 2**self.bit_depth
-        appox_percenntage, _ = get_approximate(max_pixel_value / 100, 16, 8)
-        # Removed overexposed and underexposed pixels for wb gain calculation
-        overexposed_limit = (
-            max_pixel_value - (self.overexposed_percentage) * appox_percenntage
+        max_pixel_value = (2**self.bit_depth) - 1
+        # appox_percenntage, _ = get_approximate(max_pixel_value / 100, 16, 8)
+        delta_overexposed = np.uint16(
+            max_pixel_value * (self.overexposed_percentage / 100)
         )
-        underexposed_limit = (self.underexposed_percentage) * appox_percenntage
+        delta_underexposed = np.uint16(
+            max_pixel_value * (self.underexposed_percentage / 100)
+        )
+        # Removed overexposed and underexposed pixels for wb gain calculation
+        overexposed_limit = np.uint16(max_pixel_value - delta_overexposed)
+        underexposed_limit = np.uint16(delta_underexposed)
 
         if self.is_debug:
             print("   - AWB - Underexposed Pixel Limit = ", underexposed_limit)
             print("   - AWB - Overexposed Pixel Limit  = ", overexposed_limit)
 
         if self.bayer == "rggb":
-
             r_channel = self.raw[0::2, 0::2]
             gr_channel = self.raw[0::2, 1::2]
             gb_channel = self.raw[1::2, 0::2]
@@ -90,8 +92,8 @@ class AutoWhiteBalance:
 
         bad_pixels = np.sum(
             np.where(
-                (bayer_channels < underexposed_limit)
-                | (bayer_channels > overexposed_limit),
+                (bayer_channels <= underexposed_limit)
+                | (bayer_channels >= overexposed_limit),
                 1,
                 0,
             ),
@@ -100,20 +102,22 @@ class AutoWhiteBalance:
         self.flatten_raw = bayer_channels[bad_pixels == 0]
         # print(self.flatten_raw.shape)
 
-        channels_mean = np.mean(self.flatten_raw, axis=0)
-        # print(channels_mean)
+        channels_sum = np.sum(self.flatten_raw, axis=0, dtype=np.uint64)
+        # print(channels_sum)
 
-        g_mean = np.mean(channels_mean[1:3], axis=0)
+        # g_sum = (gr_sum + gb_sum) / 2
+        g_sum = np.mean(channels_sum[1:3], axis=0, dtype=np.uint64)
+        g_sum = g_sum * 256
 
-        rgain = np.nan_to_num(g_mean / channels_mean[0])
-        bgain = np.nan_to_num(g_mean / channels_mean[3])
+        rgain = np.uint16(np.nan_to_num(np.uint16(g_sum / channels_sum[0])))
+        bgain = np.uint16(np.nan_to_num(np.uint16(g_sum / channels_sum[3])))
 
         # Check if r_gain and b_gain go out of bound
         rgain = 1 if rgain <= 0 else rgain
         bgain = 1 if bgain <= 0 else bgain
 
-        rgain_approx, rgain_approx_bin = get_approximate(rgain, 16, 8)
-        bgain_approx, bgain_approx_bin = get_approximate(bgain, 16, 8)
+        rgain_approx, rgain_approx_bin = get_approximate(rgain / 256, 16, 8)
+        bgain_approx, bgain_approx_bin = get_approximate(bgain / 256, 16, 8)
 
         if self.is_debug:
             print("   - AWB Actual Gains: ")
@@ -143,4 +147,5 @@ class AutoWhiteBalance:
             rgain, bgain = self.determine_white_balance_gain()
             print(f"  Execution time: {time.time() - start:.3f}s")
             return np.array([rgain, bgain])
+
         return None

@@ -29,12 +29,10 @@ def video_processing():
 
     infinite_isp = InfiniteISP(DATASET_PATH, CONFIG_PATH)
 
-    # set generate_tv flag to false
-    infinite_isp.c_yaml["platform"]["generate_tv"] = False
+    # set render_3a flag to false
     infinite_isp.c_yaml["platform"]["render_3a"] = False
 
     for file in tqdm(raw_files, disable=False, leave=True):
-
         infinite_isp.execute(file)
         infinite_isp.load_3a_statistics()
 
@@ -62,19 +60,14 @@ def dataset_processing():
 
     infinite_isp = InfiniteISP(DATASET_PATH, default_config)
 
-    # set generate_tv flag to false
-    infinite_isp.c_yaml["platform"]["generate_tv"] = False
-
     is_default_config = True
 
     for raw in tqdm(raw_images, ncols=100, leave=True):
-
         raw_path_object = Path(raw)
         config_file = raw_path_object.stem + "-configs.yml"
 
         # check if the config file exists in the DATASET_PATH
         if find_files(config_file, DATASET_PATH):
-
             print(f"Found {config_file}.")
 
             # use raw config file in dataset
@@ -126,7 +119,6 @@ def find_files(filename, search_path):
 
 
 if __name__ == "__main__":
-
     if VIDEO_MODE:
         print("PROCESSING VIDEO FRAMES ONE BY ONE IN SEQUENCE")
         video_processing()

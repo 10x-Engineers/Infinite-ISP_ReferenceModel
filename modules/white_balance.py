@@ -7,7 +7,7 @@ Author: 10xEngineers Pvt Ltd
 """
 import time
 import numpy as np
-from util.utils import get_approximate, save_output_array
+from util.utils import get_approximate
 
 
 class WhiteBalance:
@@ -15,7 +15,7 @@ class WhiteBalance:
     White balance Module
     """
 
-    def __init__(self, img, platform, sensor_info, parm_wbc):
+    def __init__(self, img, platform, sensor_info, parm_wbc, save_out_obj):
         """
         Class Constructor
         """
@@ -30,6 +30,7 @@ class WhiteBalance:
         self.bayer = self.sensor_info["bayer_pattern"]
         self.bpp = self.sensor_info["bit_depth"]
         self.raw = None
+        self.save_out_obj = save_out_obj
 
     def apply_wb_parameters(self):
         """
@@ -73,7 +74,7 @@ class WhiteBalance:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 "Out_white_balance_",

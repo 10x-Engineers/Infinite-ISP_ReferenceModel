@@ -9,15 +9,13 @@ Author: 10xEngineers Pvt Ltd
 import time
 import numpy as np
 
-from util.utils import save_output_array
-
 
 class DigitalGain:
     """
     Digital Gain
     """
 
-    def __init__(self, img, platform, sensor_info, parm_dga):
+    def __init__(self, img, platform, sensor_info, parm_dga, save_out_obj):
         self.img = img.copy()
         self.is_save = parm_dga["is_save"]
         self.is_debug = parm_dga["is_debug"]
@@ -28,6 +26,7 @@ class DigitalGain:
         self.sensor_info = sensor_info
         self.platform = platform
         self.param_dga = parm_dga
+        self.save_out_obj = save_out_obj
 
     def apply_digital_gain(self):
         """
@@ -48,7 +47,6 @@ class DigitalGain:
         # 'ae_correction < 0' - Image is underexposed
 
         if self.is_auto:
-
             if self.ae_feedback < 0:
                 # max/min functions is applied to not allow digital gains exceed the defined limits
                 self.current_gain = min(
@@ -73,7 +71,7 @@ class DigitalGain:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 "Out_digital_gain_",

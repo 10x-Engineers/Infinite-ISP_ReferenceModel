@@ -7,7 +7,7 @@ Author: 10xEngineers Pvt Ltd
 """
 import time
 import numpy as np
-from util.utils import get_approximate, save_output_array
+from util.utils import get_approximate
 
 
 class BlackLevelCorrection:
@@ -15,7 +15,7 @@ class BlackLevelCorrection:
     Black Level Correction
     """
 
-    def __init__(self, img, platform, sensor_info, parm_blc):
+    def __init__(self, img, platform, sensor_info, parm_blc, save_out_obj):
         self.img = img.copy()
         self.enable = parm_blc["is_enable"]
         self.is_save = parm_blc["is_save"]
@@ -24,6 +24,7 @@ class BlackLevelCorrection:
         self.platform = platform
         self.param_blc = parm_blc
         self.is_linearize = self.param_blc["is_linear"]
+        self.save_out_obj = save_out_obj
 
     def apply_blc_parameters(self):
         """
@@ -67,7 +68,6 @@ class BlackLevelCorrection:
             print("   - BLC - B linearization factor (U16.14): " + b_linfact_bin)
 
         if bayer == "rggb":
-
             # implementing this formula with condition
             # ((img - blc) / (sat_level-blc)) * bitRange
 
@@ -128,7 +128,7 @@ class BlackLevelCorrection:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 "Out_black_level_correction_",

@@ -27,17 +27,15 @@ ISP pipeline for `InfiniteISP_ReferenceModel v1.0`
 
 1. **RTL-friendly Code**: The model provides a Python implementation of camera pipeline modules that can be directly translated to RTL, with optimizations such as lookup tables, custom approximations, and integer calculations.
 
-2. **Test Vector Generation**: The project includes automated scripts for generating test vectors for individual as well as multiple modules, simplifying the testing process.
+2. **Dataset Processing**: The model facilitates execution for multiple images with different or same configuration files.
 
-3. **Dataset Processing**: The model facilitates execution for multiple images with different or same configuration files.
-
-4. **Video Processing**: The model also features a video processing script that allows for sequential frame processing, with operational 3A Statistics data flowing between frames.
+3. **Video Processing**: The model also features a video processing script that allows for sequential frame processing, with operational 3A Statistics data flowing between frames.
 
 
 
 ## Objectives
 
-The primary objective of Infinite-ISP_ReferenceModel is to create a open source Python-based Model that streamlines the process of implementing camera pipeline modules into RTL-friendly implementations. This enables seamless integration with hardware designs and simplifies the development of efficient image processing systems. By providing optimized algorithms, test vector generation, and video processing capabilities, the model aims to be an invaluable tool for developers working on image processing projects and RTL implementations.
+The primary objective of Infinite-ISP_ReferenceModel is to create a open source Python-based Model that streamlines the process of implementing camera pipeline modules into RTL-friendly implementations. This enables seamless integration with hardware designs and simplifies the development of efficient image processing systems. By providing optimized algorithms, and video processing capabilities, the model aims to be an invaluable tool for developers working on image processing projects and RTL implementations.
 
 # Features List
 
@@ -62,6 +60,7 @@ The table below provides a feature list of the model. The version `1.0` of the m
 | Noise Reduction                               | [Non-local means filter](https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf) <br> - Implements intensity level difference  through a LUT|
 | RGB Conversion                               | Converts YCbCr digital image to RGB|
 | Invalid Region Crop    | Crops image to a fixed size|
+|On Screen Display       | Adds 10x Logo on top left corner             | 
 | Scale                                         | Nearest Neighbor <br> - Integer Scaling |
 | YUV Format                                    | YUV <br> - 444 <br> - 422 |
 
@@ -85,7 +84,7 @@ git clone https://github.com/10xEngineersTech/Infinite-ISP_ReferenceModel
 ```shell
 pip install -r requirements.txt
 ```
-3. Run [isp_pipeline.py](isp+pipeline.py) 
+3. Run [isp_pipeline.py](isp_pipeline.py) 
 ```shell
 python isp_pipeline.py
 ```
@@ -124,7 +123,7 @@ DATASET_PATH = './in_frames/normal/data'
 
 ```shell
 git submodule add <url> <path>
-git submodule update –-init –-recursive
+git submodule update --init --recursive
 ``` 
 
 
@@ -136,9 +135,6 @@ DATASET_PATH = './in_frames/normal/<dataset_name>'
 
 5. Run `isp_pipeline_dataset.py` or `video_processing.py`
 6. The processed images are saved in [out_frames](out_frames/) folder.
-
-## Test Vector Generation
-Please refer to  the provided [instructions](test_vector_generation/README.md) for generating test vectors for multiple images, considering individual or multiple modules as the Device Under Test (DUT).
 
 ## Contributing
 
