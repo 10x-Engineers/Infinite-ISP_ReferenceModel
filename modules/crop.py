@@ -52,11 +52,11 @@ class Crop:
             img = img[:, cols_to_crop // 2 : -cols_to_crop // 2]
 
         if rows_to_crop % 4 != 0 or cols_to_crop % 4 != 0:
-                print(
-                    "   - Input/Output heights are not compatible."
-                " Bayer pattern will be disturbed if cropped!\n"
+            print(
+                "   - Input/Output heights are not compatible. "
+                "Bayer pattern will be disturbed if cropped!\n"
                 f"   - Image size: {img.shape} "
-                )
+            )
         return img
 
     def apply_cropping(self):
