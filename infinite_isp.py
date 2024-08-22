@@ -27,6 +27,7 @@ from modules.yuv_conv_format import YUVConvFormat as YUV_C
 from modules.noise_reduction_2d import NoiseReduction2d as NR2D
 from modules.rgb_conversion import RGBConversion as RGBC
 from modules.invalid_region_crop import InvalidRegionCrop as IRC
+from modules.on_screen_display import OnScreenDisplay as OSD
 from modules.scale import Scale
 from modules.crop import Crop
 from modules.auto_exposure import AutoExposure as AE
@@ -44,6 +45,7 @@ class InfiniteISP:
         """
         self.data_path = data_path
         self.load_config(config_path)
+        self.save_output_obj = util.SaveOutput()
 
     def load_config(self, config_path):
         """
@@ -80,9 +82,12 @@ class InfiniteISP:
         self.parm_irc = c_yaml["invalid_region_crop"]
         self.parm_sca = c_yaml["scale"]
         self.parm_yuv = c_yaml["yuv_conversion_format"]
+        self.parm_osd = c_yaml["on_screen_display"]
         self.c_yaml = c_yaml
 
         self.platform["rgb_output"] = self.parm_rgb["is_enable"]
+
+        return c_yaml
 
     def load_raw(self):
         """
@@ -124,57 +129,117 @@ class InfiniteISP:
 
         # =====================================================================
         # Cropping
-        crop = Crop(self.raw, self.platform, self.sensor_info, self.parm_cro)
+        crop = Crop(
+            self.raw,
+            self.platform,
+            self.sensor_info,
+            self.parm_cro,
+            self.save_output_obj,
+        )
         cropped_img = crop.execute()
 
         # =====================================================================
         #  Dead pixels correction
-        dpc = DPC(cropped_img, self.platform, self.sensor_info, self.parm_dpc)
+        dpc = DPC(
+            cropped_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_dpc,
+            self.save_output_obj,
+        )
         dpc_raw = dpc.execute()
 
         # =====================================================================
         # Black level correction
-        blc = BLC(dpc_raw, self.platform, self.sensor_info, self.parm_blc)
+        blc = BLC(
+            dpc_raw,
+            self.platform,
+            self.sensor_info,
+            self.parm_blc,
+            self.save_output_obj,
+        )
         blc_raw = blc.execute()
 
         # =====================================================================
         # OECF
-        oecf = OECF(blc_raw, self.platform, self.sensor_info, self.parm_oec)
+        oecf = OECF(
+            blc_raw,
+            self.platform,
+            self.sensor_info,
+            self.parm_oec,
+            self.save_output_obj,
+        )
         oecf_raw = oecf.execute()
 
         # =====================================================================
         # Digital Gain
-        dga = DG(oecf_raw, self.platform, self.sensor_info, self.parm_dga)
+        dga = DG(
+            oecf_raw,
+            self.platform,
+            self.sensor_info,
+            self.parm_dga,
+            self.save_output_obj,
+        )
         dga_raw, self.dga_current_gain = dga.execute()
 
         # =====================================================================
         # Bayer noise reduction
-        bnr = BNR(dga_raw, self.platform, self.sensor_info, self.parm_bnr)
+        bnr = BNR(
+            dga_raw,
+            self.platform,
+            self.sensor_info,
+            self.parm_bnr,
+            self.save_output_obj,
+        )
         bnr_raw = bnr.execute()
 
         # =====================================================================
         # Auto White Balance
-        awb = AWB(bnr_raw, self.sensor_info, self.parm_awb)
+        awb = AWB(
+            bnr_raw,
+            self.sensor_info,
+            self.parm_awb,
+        )
         self.awb_gains = awb.execute()
 
         # =====================================================================
         # White balancing
-        wbc = WB(bnr_raw, self.platform, self.sensor_info, self.parm_wbc)
+        wbc = WB(
+            bnr_raw,
+            self.platform,
+            self.sensor_info,
+            self.parm_wbc,
+            self.save_output_obj,
+        )
         wb_raw = wbc.execute()
 
         # =====================================================================
         # CFA demosaicing
-        cfa_inter = Demosaic(wb_raw, self.platform, self.sensor_info, self.parm_dem)
+        cfa_inter = Demosaic(
+            wb_raw, self.platform, self.sensor_info, self.parm_dem, self.save_output_obj
+        )
         demos_img = cfa_inter.execute()
 
         # =====================================================================
         # Color correction matrix
-        ccm = CCM(demos_img, self.platform, self.sensor_info, self.parm_ccm)
+        ccm = CCM(
+            demos_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_ccm,
+            self.save_output_obj,
+        )
         ccm_img = ccm.execute()
 
         # =====================================================================
         # Gamma
-        gmc = GC(ccm_img, self.platform, self.sensor_info, self.parm_gmc)
+        gmc = GC(
+            ccm_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_gmc,
+            self.save_output_obj,
+        )
         gamma_raw = gmc.execute()
 
         # =====================================================================
@@ -184,34 +249,80 @@ class InfiniteISP:
 
         # =====================================================================
         # Color space conversion
-        csc = CSC(gamma_raw, self.platform, self.sensor_info, self.parm_csc)
+        csc = CSC(
+            gamma_raw,
+            self.platform,
+            self.sensor_info,
+            self.parm_csc,
+            self.save_output_obj,
+        )
         csc_img = csc.execute()
 
         # =====================================================================
         # 2d noise reduction
-        nr2d = NR2D(csc_img, self.sensor_info, self.parm_2dn, self.platform)
+        nr2d = NR2D(
+            csc_img,
+            self.sensor_info,
+            self.parm_2dn,
+            self.platform,
+            self.save_output_obj,
+        )
         nr2d_img = nr2d.execute()
 
         # =====================================================================
         # RGB conversion
         rgbc = RGBC(
-            nr2d_img, self.platform, self.sensor_info, self.parm_rgb, self.parm_csc
+            nr2d_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_rgb,
+            self.parm_csc,
+            self.save_output_obj,
         )
         rgbc_img = rgbc.execute()
 
         # =====================================================================
         # crop image to 1920x1080 or 1920x1440
-        irc = IRC(rgbc_img, self.platform, self.sensor_info, self.parm_irc)
+        irc = IRC(
+            rgbc_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_irc,
+            self.save_output_obj,
+        )
         irc_img = irc.execute()
 
         # =====================================================================
+        # on-screen display for 10xEngineers logo
+        osd = OSD(
+            irc_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_osd,
+            self.save_output_obj,
+        )
+        osd_img = osd.execute()
+
+        # =====================================================================
         # Scaling
-        scale = Scale(irc_img, self.platform, self.sensor_info, self.parm_sca)
+        scale = Scale(
+            osd_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_sca,
+            self.save_output_obj,
+        )
         scaled_img = scale.execute()
 
         # =====================================================================
         # YUV saving format 444, 422 etc
-        yuv = YUV_C(scaled_img, self.platform, self.sensor_info, self.parm_yuv)
+        yuv = YUV_C(
+            scaled_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_yuv,
+            self.save_output_obj,
+        )
         yuv_conv = yuv.execute()
 
         out_img = yuv_conv  # original Output of ISP
@@ -220,12 +331,10 @@ class InfiniteISP:
         # ======================================================================
         # Is not part of ISP-pipeline only assists in visualizing output results
         if visualize_output:
-
             # There can be two out_img formats depending upon which modules are
             # enabled 1. YUV    2. RGB
 
             if self.parm_yuv["is_enable"] is True:
-
                 # YUV_C is enabled and RGB_C is disabled: Output is compressed YUV
                 # To display : Need to decompress it and convert it to RGB.
                 image_height, image_width, _ = out_dim
@@ -238,23 +347,23 @@ class InfiniteISP:
                 rgbc.yuv_img = yuv_conv
                 out_rgb = rgbc.yuv_to_rgb()
 
-            elif self.parm_rgb["is_enable"] is False:
+            # elif self.parm_rgb["is_enable"] is False:
+            #     # RGB_C is disabled: Output is 3D - YUV
+            #     # To display : Only convert it to RGB
+            #     rgbc.yuv_img = yuv_conv
+            #     out_rgb = rgbc.yuv_to_rgb()
 
-                # RGB_C is disabled: Output is 3D - YUV
-                # To display : Only convert it to RGB
-                rgbc.yuv_img = yuv_conv
-                out_rgb = rgbc.yuv_to_rgb()
-
-            else:
+            # else:
                 # RGB_C is enabled: Output is RGB
                 # no further processing is needed for display
+            else:
                 out_rgb = out_img
 
             # If both RGB_C and YUV_C are enabled. Infinite-ISP will generate
             # an output but it will be an invalid image.
 
-            util.save_pipeline_output(
-                self.out_file, out_rgb, self.c_yaml, self.platform["generate_tv"]
+            self.save_output_obj.save_pipeline_output(
+                self.out_file, out_rgb, self.c_yaml
             )
 
     def execute(self, img_path=None):
@@ -383,3 +492,13 @@ class InfiniteISP:
             self.parm_wbc["b_gain"] = self.c_yaml["white_balance"][
                 "b_gain"
             ] = sensor_info[6][2]
+
+    def set_save_paths(self, new_path):
+        """Set paths to save module/pipeline output"""
+        pipeline_outpath = new_path / "out_frames"
+        module_outpath = new_path
+        config_outpath = new_path / "config"
+
+        self.save_output_obj.reset_outpaths(
+            pipeline_outpath, module_outpath, config_outpath
+        )

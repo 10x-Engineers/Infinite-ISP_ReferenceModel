@@ -5,7 +5,6 @@ Code / Paper  Reference:
 Author: 10xEngineers Pvt Ltd
 ------------------------------------------------------------
 """
-import os
 from datetime import datetime
 import random
 import warnings
@@ -16,15 +15,8 @@ from fxpmath import Fxp
 from scipy.signal import correlate2d
 import matplotlib.pyplot as plt
 
-# Infinite-ISP output directory
-OUTPUT_DIR = "out_frames/"
-
-# Output directory for Generated Test Vectors
-OUTPUT_ARRAY_DIR = "./test_vectors/Results/"
-
 
 def introduce_defect(img, total_defective_pixels, padding):
-
     """
     This function randomly replaces pixels values with extremely high or low
     pixel values to create dead pixels (Dps).
@@ -121,7 +113,6 @@ def gauss_kern_raw(size, std_dev, stride):
 
 
 def crop(img, rows_to_crop=0, cols_to_crop=0):
-
     """
     Crop 2D array.
     Parameter:
@@ -172,14 +163,14 @@ def approx_sqrt(number, num_iterations=5):
     Get Approximate Square_root of a Number
     """
     # Initial estimate
-    sqrt = number / 2
+    sqrt = np.uint64(number / 2)
     # Only five iterations are performed to get an approximate square-root
     for _ in range(num_iterations):
-        n_by_sqrt, _ = get_approximate(number / sqrt, 46, 16)
-        sqrt = (sqrt + n_by_sqrt) / 2
+        n_by_sqrt = np.uint64(np.uint64(number) / sqrt)
+        sqrt = np.uint64((sqrt + n_by_sqrt) / 2)
         # print(sqrt)
     # Integer is returned to reduce algorithm complexity
-    return np.round(sqrt, 3).astype(np.int32)
+    return sqrt.astype(np.uint64)
 
 
 def display_ae_statistics(ae_feedback, awb_gains):
@@ -254,114 +245,6 @@ def get_image_from_yuv_format_conversion(yuv_img, height, width, yuv_custom_form
     return yuv_img
 
 
-def rev_yuv(arr):
-    """This function reverses the order of YUV channels in yuv image ARR."""
-    if len(arr.shape) != 3:
-        print("Input array must be 3D. Input array not modified.")
-        return
-
-    # Swaps U and V channel for YUV Image
-    out_arr = np.zeros(arr.shape, arr.dtype)
-    out_arr[:, :, 0] = arr[:, :, 2]
-    out_arr[:, :, 1] = arr[:, :, 1]
-    out_arr[:, :, 2] = arr[:, :, 0]
-
-    return out_arr
-
-
-def save_output_array(img_name, output_array, module_name, platform, bitdepth):
-    """
-    Saves output array [raw/rgb] for pipline modules
-    """
-    # if automation is not being executed, the output directory needs to be created
-    if not platform["generate_tv"]:
-        # create directory to save array
-        if not os.path.exists(OUTPUT_ARRAY_DIR):
-            Path(OUTPUT_ARRAY_DIR).mkdir(parents=True, exist_ok=False)
-
-    # filename identifies input image and isp pipeline module for which testing
-    # vector is generated
-    filename = OUTPUT_ARRAY_DIR + module_name + img_name.split(".")[0]
-
-    if platform["save_format"] == "npy" or platform["save_format"] == "both":
-
-        # save image as npy array
-        np.save(filename, output_array.astype("uint16"))
-
-    if platform["save_format"] == "png" or platform["save_format"] == "both":
-
-        # convert image to 8-bit image if required
-        if output_array.dtype != np.uint8 and len(output_array.shape) > 2:
-            shift_by = bitdepth - 8
-            output_array = (output_array >> shift_by).astype("uint8")
-
-        # save Image as .png
-        plt.imsave(filename + ".png", output_array)
-
-
-def save_output_array_yuv(img_name, output_array, module_name, platform):
-    """
-    Saves output array [yuv] for pipline modules
-    """
-    # if automation is not being executed, the output directory needs to be created
-    if not platform["generate_tv"]:
-        # create directory to save array
-        if not os.path.exists(OUTPUT_ARRAY_DIR):
-            Path(OUTPUT_ARRAY_DIR).mkdir(parents=True, exist_ok=False)
-
-    # filename identifies input image and isp pipeline module for which testing
-    # vector is generated
-    filename = OUTPUT_ARRAY_DIR + module_name + img_name.split(".")[0]
-
-    # save image as .nppy array
-    if platform["save_format"] == "npy" or platform["save_format"] == "both":
-        # sawp_on is used for scenarios in devices where YUV channels are stored as YVU
-        # so it swaps V and U for hardware compatibility
-        if platform["rev_yuv_channels"]:
-            swapped_array = rev_yuv(output_array)
-            np.save(filename, swapped_array.astype("uint16"))
-        else:
-            np.save(filename, output_array.astype("uint16"))
-
-    # save image as .png
-    if platform["save_format"] == "png" or platform["save_format"] == "both":
-        plt.imsave(filename + ".png", output_array)
-
-
-def save_pipeline_output(img_name, output_img, config_file, tv_flag):
-    """
-    Saves the output image (png) and config file in OUTPUT_DIR
-    """
-
-    # Time Stamp for output filename
-    dt_string = datetime.now().strftime("_%Y%m%d_%H%M%S")
-
-    # Set list format to flowstyle to dump yaml file
-    yaml.add_representer(list, represent_list)
-
-    # Storing configuration file for output image
-    with open(
-        OUTPUT_DIR + img_name + dt_string + ".yaml", "w", encoding="utf-8"
-    ) as file:
-        yaml.dump(
-            config_file,
-            file,
-            sort_keys=False,
-            Dumper=CustomDumper,
-            width=17000,
-        )
-
-    # Save Image as .png
-    plt.imsave(OUTPUT_DIR + img_name + dt_string + ".png", output_img)
-
-    # If tv_flag is true then one copy of out image is also stored in test_vectors folder
-    if tv_flag:
-        Path((OUTPUT_ARRAY_DIR + OUTPUT_DIR)[0:-1]).mkdir(parents=True, exist_ok=True)
-        plt.imsave(
-            OUTPUT_ARRAY_DIR + OUTPUT_DIR + img_name + dt_string + ".png", output_img
-        )
-
-
 def create_coeff_file(numbers, filename, weight_bits):
     """
     Creating file for coefficients
@@ -419,3 +302,108 @@ def represent_list(self, data):
     """This function ensures that the lookup table are stored on flow style
     to keep the saved yaml file readable."""
     return self.represent_sequence("tag:yaml.org,2002:seq", data, flow_style=True)
+
+
+class SaveOutput:
+    """Class to save module or pipeline output"""
+
+    def __init__(self):
+        self.pipleine_outpath = Path("./out_frames")
+        self.module_outpath = Path("./out_frames/module_output")
+        self.config_outpath = Path("./out_frames")
+        self.create_out_dirs()
+
+    def create_out_dirs(self):
+        """Create directories if it does not exist."""
+        for path in [self.pipleine_outpath, self.module_outpath, self.config_outpath]:
+            if not path.exists():
+                path.mkdir(parents=True, exist_ok=True)
+
+    def reset_outpaths(self, new_pipeline_path, new_mod_path, new_config_path):
+        """Reset outpaths"""
+        self.pipleine_outpath = Path(new_pipeline_path)
+        self.module_outpath = Path(new_mod_path)
+        self.config_outpath = Path(new_config_path)
+        self.create_out_dirs()
+
+    def save_output_array(
+        self, img_name, output_array, module_name, platform, bitdepth
+    ):
+        """
+        Saves output array [raw/rgb] for pipline modules
+        """
+
+        # filename identifies input image and isp pipeline module for which the output
+        # array is saved
+        filename = self.module_outpath / (module_name + img_name.split(".")[0])
+
+        if platform["save_format"] == "npy" or platform["save_format"] == "both":
+            # save image as npy array
+            np.save(filename, output_array.astype("uint16"))
+
+        if platform["save_format"] == "png" or platform["save_format"] == "both":
+            # convert image to 8-bit image if required
+            if output_array.dtype != np.uint8 and len(output_array.shape) > 2:
+                shift_by = bitdepth - 8
+                output_array = (output_array >> shift_by).astype("uint8")
+
+            # save Image as .png
+            plt.imsave(filename.with_suffix(".png"), output_array)
+
+    def save_output_array_yuv(self, img_name, output_array, module_name, platform):
+        """
+        Saves output array [yuv] for pipline modules
+        """
+
+        # filename identifies input image and isp pipeline module for which the output
+        # array is saved
+        filename = self.module_outpath / (module_name + img_name.split(".")[0])
+
+        # save image as .npy array
+        if platform["save_format"] == "npy" or platform["save_format"] == "both":
+            np.save(filename, output_array.astype("uint16"))
+
+        # save image as .png
+        if platform["save_format"] == "png" or platform["save_format"] == "both":
+            plt.imsave(filename.with_suffix(".png"), output_array)
+
+    def save_output_3a(self, img_name, output_array, module_name):
+        """Save the stats returned by the 3A module in a txt file"""
+
+        filename = self.module_outpath / (module_name + img_name.split(".")[0])
+
+        if output_array is not None:
+            with open(filename.with_suffix(".txt"), "w", encoding="utf-8") as txt_file:
+                if "auto_white_balance" in module_name:
+                    print(f"RGain = {output_array[0]}", file=txt_file)
+                    print(f"BGain = {output_array[1]}", file=txt_file)
+                elif "auto_exposure" in module_name:
+                    pass
+
+    def save_pipeline_output(self, img_name, output_img, config_file):
+        """
+        Saves the output image (png) and config file at pipleine_outpath
+        """
+
+        # Time Stamp for output filename
+        dt_string = datetime.now().strftime("_%Y%m%d_%H%M%S")
+
+        # Set list format to flowstyle to dump yaml file
+        yaml.add_representer(list, represent_list)
+
+        # Storing configuration file for output image
+        with open(
+            self.config_outpath / (img_name + dt_string + ".yaml"),
+            "w",
+            encoding="utf-8",
+        ) as file:
+            yaml.dump(
+                config_file,
+                file,
+                sort_keys=False,
+                Dumper=CustomDumper,
+                width=17000,
+            )
+
+        # Save Image as .png
+        plt.imsave(self.pipleine_outpath / (img_name + dt_string + ".png"), output_img)

@@ -7,7 +7,6 @@ Author: 10xEngineers Pvt Ltd
 """
 import re
 import time
-from util.utils import save_output_array_yuv, save_output_array
 
 
 class InvalidRegionCrop:
@@ -22,7 +21,7 @@ class InvalidRegionCrop:
     as the input image.
     """
 
-    def __init__(self, img, platform, sensor_info, parm_irc):
+    def __init__(self, img, platform, sensor_info, parm_irc, save_out_obj):
         self.img = img.copy()
         self.enable = parm_irc["is_enable"]
         self.platform = platform
@@ -32,6 +31,7 @@ class InvalidRegionCrop:
         self.bit_depth = sensor_info["bit_depth"]
         self.sensor_info = sensor_info
         self.is_valid = False
+        self.save_out_obj = save_out_obj
 
     def get_idx_for_rtl(self):
         """An offset is added to the indices to enbale exact array comparison."""
@@ -53,8 +53,8 @@ class InvalidRegionCrop:
         self.h_idx_rtl = self.h_strat_idx + offset
         self.w_idx_rtl = self.w_strat_idx
 
-        # if the user-defined indices are within this defined range, generated TVs
-        #  can be compared without any removal of rows or columns.
+        # if the user-defined indices are within this defined range, generated output
+        # array can be compared without any removal of rows or columns with the RTL output.
         # Input image size is assumed to be 2592x1536
         min_idx_h_gm, min_idx_w_gm = 14, 14
         max_idx_w_gm = 644
@@ -69,7 +69,6 @@ class InvalidRegionCrop:
         self.is_valid = idx_valid_h and idx_valid_w
 
     def crop_3d(self, img, strat_h, end_h, start_w, end_w):
-
         """This function performs cropping on a 3-channel image. The cropped
         region is determined by the given starting and ending indices for
         height and width"""
@@ -129,7 +128,7 @@ class InvalidRegionCrop:
                 print("   - IRC - Output height = ", self.new_h)
                 if self.is_valid:
                     print(
-                        "   - IRC - Indices for RTL can be used for TV comparison "
+                        "   - IRC - Indices for RTL can be used for output comparison "
                         + "without removal of rows/border."
                     )
 
@@ -147,7 +146,7 @@ class InvalidRegionCrop:
         )
         if self.is_save:
             if self.platform["rgb_output"]:
-                save_output_array(
+                self.save_out_obj.save_output_array(
                     self.platform["in_file"],
                     self.img,
                     "Out_invalid_region_crop_",
@@ -155,7 +154,7 @@ class InvalidRegionCrop:
                     self.bit_depth,
                 )
             else:
-                save_output_array_yuv(
+                self.save_out_obj.save_output_array_yuv(
                     self.platform["in_file"],
                     self.img,
                     "Out_invalid_region_crop_",

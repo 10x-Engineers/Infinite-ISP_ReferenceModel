@@ -15,15 +15,13 @@ Code / Paper  Reference: https://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.709_conver
 import time
 import numpy as np
 
-from util.utils import save_output_array_yuv
-
 
 class ColorSpaceConversion:
     """
     Color Space Conversion
     """
 
-    def __init__(self, img, platform, sensor_info, parm_csc):
+    def __init__(self, img, platform, sensor_info, parm_csc, save_out_obj):
         self.img = img.copy()
         self.is_save = parm_csc["is_save"]
         self.platform = platform
@@ -34,6 +32,7 @@ class ColorSpaceConversion:
         self.rgb2yuv_mat = None
         self.yuv_img = None
         self.yuv2rgb_mat = None
+        self.save_out_obj = save_out_obj
 
     def rgb_to_yuv_8bit(self):
         """
@@ -46,11 +45,10 @@ class ColorSpaceConversion:
                 [[47, 157, 16], [-26, -86, 112], [112, -102, -10]]
             )
         else:
-
             # for BT.601/407
             # conversion metrix with 8bit integer co-efficients - m=8
             self.rgb2yuv_mat = np.array(
-                [[77, 150, 29], [131, -110, -21], [-44, -87, 138]]
+                [[77, 150, 29], [-44, -87, 138], [131, -110, -21]]
             )
 
         # make nx3 2d matrix of image
@@ -92,7 +90,7 @@ class ColorSpaceConversion:
         Function to save module output
         """
         if self.is_save:
-            save_output_array_yuv(
+            self.save_out_obj.save_output_array_yuv(
                 self.platform["in_file"],
                 self.img,
                 "Out_color_space_conversion_",

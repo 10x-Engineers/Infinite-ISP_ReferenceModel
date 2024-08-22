@@ -14,8 +14,6 @@ Platform contains configuration parameters that are not part of the ISP pipeline
 | disable_progress_bar| Enables or disables the progress bar for time taking modules|
 | leave_pbar_string   |  Hides or unhides the progress bar upon completion |
 | save_lut            | Flag to store LUT files for 2DNR and BNR |
-| generate_tv         | Indicates that ISP pipeline is running through [automate_execution.py](../test_vector_generation/automate_execution.py) for debugging instead of [isp_pipeline.py](../isp_pipeline.py)|
-|rev_yuv_channels| Use for debugging - Generate YUV test vectors with reversed channels (VUY)|
 |save_format| Use for Debugging - Set module output format <br> - `npy` <br> - `png` <br> - `both` |
 |rendered_3a| Returns 3a rendered final image with awb gains and correct exposure|
 
