@@ -12,7 +12,7 @@ import time
 import os
 import numpy as np
 from tqdm import tqdm
-from util.utils import create_coeff_file, save_output_array_yuv
+from util.utils import create_coeff_file
 
 
 class NoiseReduction2d:
@@ -20,7 +20,7 @@ class NoiseReduction2d:
     2D Noise Reduction
     """
 
-    def __init__(self, img, sensor_info, parm_2dnr, platform):
+    def __init__(self, img, sensor_info, parm_2dnr, platform, save_out_obj):
         self.img = img.copy()
         self.enable = parm_2dnr["is_enable"]
         self.is_save = parm_2dnr["is_save"]
@@ -30,6 +30,7 @@ class NoiseReduction2d:
         self.is_progress = platform["disable_progress_bar"]
         self.is_leave = platform["leave_pbar_string"]
         self.save_lut = platform["save_lut"]
+        self.save_out_obj = save_out_obj
 
     def make_weighted_curve(self, n_ind):
         """
@@ -156,7 +157,7 @@ class NoiseReduction2d:
         Function to save module output
         """
         if self.is_save:
-            save_output_array_yuv(
+            self.save_out_obj.save_output_array_yuv(
                 self.platform["in_file"],
                 self.img,
                 "Out_2d_noise_reduction_",

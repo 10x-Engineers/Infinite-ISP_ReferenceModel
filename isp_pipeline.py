@@ -13,9 +13,5 @@ RAW_DATA = "./in_frames/normal"
 FILENAME = None
 
 if __name__ == "__main__":
-
     infinite_isp = InfiniteISP(RAW_DATA, CONFIG_PATH)
-
-    # set generate_tv flag to false
-    infinite_isp.c_yaml["platform"]["generate_tv"] = False
     infinite_isp.execute(img_path=FILENAME)

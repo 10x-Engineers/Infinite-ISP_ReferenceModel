@@ -10,13 +10,12 @@ import time
 import numpy as np
 from tqdm import tqdm
 from scipy.ndimage import maximum_filter, minimum_filter, correlate
-from util.utils import save_output_array
 
 
 class DeadPixelCorrection:
     "Dead Pixel Correction"
 
-    def __init__(self, img, platform, sensor_info, parm_dpc):
+    def __init__(self, img, platform, sensor_info, parm_dpc, save_out_obj):
         self.img = img.copy()
         self.enable = parm_dpc["is_enable"]
         self.is_save = parm_dpc["is_save"]
@@ -28,6 +27,7 @@ class DeadPixelCorrection:
         self.bpp = self.sensor_info["bit_depth"]
         self.threshold = parm_dpc["dp_threshold"]
         self.is_debug = parm_dpc["is_debug"]
+        self.save_out_obj = save_out_obj
 
     def padding(self):
         """Return a mirror padded copy of image."""
@@ -372,7 +372,6 @@ class DeadPixelCorrection:
 
                 # center_pixel is good if pixel value is between min and max of a 3x3 neighborhhood.
                 if not min(neighbors) < center_pixel < max(neighbors):
-
                     # ""center_pixel is corrected only if the difference of center_pixel and every
                     # neighboring pixel is greater than the speciified threshold.
                     # The two if conditions are used in combination to reduce False positives.""
@@ -432,7 +431,7 @@ class DeadPixelCorrection:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.in_file,
                 self.img,
                 "Out_dead_pixel_correction_",

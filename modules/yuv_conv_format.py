@@ -14,13 +14,14 @@ Author: 10xEngineers Pvt Ltd
 import time
 import re
 import numpy as np
-from util.utils import save_output_array
 
 
 class YUVConvFormat:
     "YUV Conversion Formats - 444, 442"
 
-    def __init__(self, img, platform, sensor_info, parm_yuv):  # parm_csc):
+    def __init__(
+        self, img, platform, sensor_info, parm_yuv, save_out_obj
+    ):  # parm_csc):
         self.img = img.copy()
         self.shape = img.shape
         self.enable = parm_yuv["is_enable"]
@@ -30,6 +31,7 @@ class YUVConvFormat:
         self.platform = platform
         self.param_yuv = parm_yuv
         self.in_file = self.platform["in_file"]
+        self.save_out_obj = save_out_obj
 
     def convert2yuv_format(self):
         """Execute YUV conversion."""
@@ -69,12 +71,11 @@ class YUVConvFormat:
             save_format = self.platform["save_format"]
             self.platform["save_format"] = "npy"
 
-            save_output_array(
+            self.save_out_obj.save_output_array_yuv(
                 self.in_file,
                 self.img,
                 f"Out_yuv_conversion_format_{self.param_yuv['conv_type']}_",
                 self.platform,
-                self.sensor_info["bit_depth"],
             )
             # restore the original save format
             self.platform["save_format"] = save_format

@@ -9,7 +9,6 @@ Author: 10xEngineers Pvt Ltd
 import time
 import re
 import numpy as np
-from util.utils import save_output_array
 
 
 class Crop:
@@ -24,16 +23,16 @@ class Crop:
     as the input image.
     """
 
-    def __init__(self, img, platform, sensor_info, parm_cro):
+    def __init__(self, img, platform, sensor_info, parm_cro, save_out_obj):
         self.img = img.copy()
         self.sensor_info = sensor_info
         self.platform = platform
         self.parm_cro = parm_cro
         self.enable = parm_cro["is_enable"]
         self.is_save = parm_cro["is_save"]
+        self.save_out_obj = save_out_obj
 
     def crop(self, img, rows_to_crop=0, cols_to_crop=0):
-
         """
         Crop 2D array.
         Parameter:
@@ -46,18 +45,18 @@ class Crop:
         Output: cropped image
         """
 
-        if rows_to_crop or cols_to_crop:
-            if rows_to_crop % 4 == 0 and cols_to_crop % 4 == 0:
-                img = img[
-                    rows_to_crop // 2 : -rows_to_crop // 2,
-                    cols_to_crop // 2 : -cols_to_crop // 2,
-                ]
+        if rows_to_crop != 0 and rows_to_crop % 4 == 0:
+            img = img[rows_to_crop // 2 : -rows_to_crop // 2, :]
 
-            else:
-                print(
-                    "   - Input/Output heights are not compatible."
-                    " Bayer pattern will be disturbed if cropped!"
-                )
+        if cols_to_crop != 0 and cols_to_crop % 4 == 0:
+            img = img[:, cols_to_crop // 2 : -cols_to_crop // 2]
+
+        if rows_to_crop % 4 != 0 or cols_to_crop % 4 != 0:
+            print(
+                "   - Input/Output heights are not compatible. "
+                "Bayer pattern will be disturbed if cropped!\n"
+                f"   - Image size: {img.shape} "
+            )
         return img
 
     def apply_cropping(self):
@@ -104,7 +103,7 @@ class Crop:
             self.platform["in_file"],
         )
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 filename_tag,

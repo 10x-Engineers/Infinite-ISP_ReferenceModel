@@ -8,15 +8,13 @@ Author: 10xEngineers Pvt Ltd
 import time
 import numpy as np
 
-from util.utils import save_output_array
-
 
 class GammaCorrection:
     """
     Gamma Correction
     """
 
-    def __init__(self, img, platform, sensor_info, parm_gmm):
+    def __init__(self, img, platform, sensor_info, parm_gmm, save_out_obj):
         self.img = img.copy()
         self.enable = parm_gmm["is_enable"]
         self.is_save = parm_gmm["is_save"]
@@ -24,6 +22,7 @@ class GammaCorrection:
         self.sensor_info = sensor_info
         self.bit_depth = sensor_info["bit_depth"]
         self.parm_gmm = parm_gmm
+        self.save_out_obj = save_out_obj
 
     def generate_gamma_8bit_lut(self):
         """
@@ -58,7 +57,7 @@ class GammaCorrection:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 "Out_gamma_correction_",

@@ -7,19 +7,19 @@ Author: 10xEngineers Pvt Ltd
 """
 import time
 import numpy as np
-from util.utils import save_output_array
 
 
 class OECF:
     "Optical Electronic Conversion Function - correction"
 
-    def __init__(self, img, platform, sensor_info, parm_oecf):
+    def __init__(self, img, platform, sensor_info, parm_oecf, save_out_obj):
         self.img = img.copy()
         self.enable = parm_oecf["is_enable"]
         self.is_save = parm_oecf["is_save"]
         self.platform = platform
         self.sensor_info = sensor_info
         self.parm_oecf = parm_oecf
+        self.save_out_obj = save_out_obj
 
     def apply_oecf(self):
         """Execute OECF."""
@@ -39,7 +39,6 @@ class OECF:
         raw_oecf = np.zeros(raw.shape)
 
         if bayer == "rggb":
-
             raw_oecf[0::2, 0::2] = rd_lut[raw[0::2, 0::2]]
             raw_oecf[0::2, 1::2] = gr_lut[raw[0::2, 1::2]]
             raw_oecf[1::2, 0::2] = gb_lut[raw[1::2, 0::2]]
@@ -71,7 +70,7 @@ class OECF:
         Function to save module output
         """
         if self.is_save:
-            save_output_array(
+            self.save_out_obj.save_output_array(
                 self.platform["in_file"],
                 self.img,
                 "Out_oecf_",
