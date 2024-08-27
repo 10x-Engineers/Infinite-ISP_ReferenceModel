@@ -50,7 +50,7 @@ class Sharpening:
 
         exp_part = (x_axis**2 / (2 * sigma_x**2)) + (y_axis**2 / (2 * sigma_y**2))
         return 1 / ((2 * np.pi * sigma_x * sigma_y) * np.exp(-exp_part))
-  
+
     def apply_sharpen(self):
         """Sharpens an image using the unsharp mask algorithm.
 
