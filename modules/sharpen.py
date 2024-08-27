@@ -50,7 +50,7 @@ class Sharpening:
 
         exp_part = (x_axis**2 / (2 * sigma_x**2)) + (y_axis**2 / (2 * sigma_y**2))
         return 1 / ((2 * np.pi * sigma_x * sigma_y) * np.exp(-exp_part))
-        
+  
     def apply_sharpen(self):
         """Sharpens an image using the unsharp mask algorithm.
 
@@ -71,38 +71,29 @@ class Sharpening:
         kernel = (kernel * (2**20)).astype(np.int32)
 
         folder_name = "coefficients/SHARP"
-        if not os.path.exists(folder_name):   # Write kernel weight to a text file for RTL simulation
-                os.makedirs(folder_name)
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
         create_coeff_file(kernel, "coefficients/SHARP/luma_kernel", 20)
 
         luma = (self.img[:, :, 0]).astype(np.int32)
 
         # Filter the luma component of the image with a Gaussian LPF
         # Smoothing magnitude can be controlled with the sharpen_sigma parameter
-        """Stage 1 and 2: Correlation"""
         correlation = ndimage.correlate(luma, kernel, mode='constant', cval=0.0, origin=0)
-        
-        """Stage 3: Division"""
+
         smoothened = correlation >> 20
 
         # Sharpen the image with upsharp mask
         # Strength is tuneable with the sharpen_strength parameter]
         sh_str = self.parm_sha["sharpen_strength"]
-        strength = int(sh_str * (2**10))  
+        strength = int(sh_str * (2**10))
 
-        """Stage 4: Subtraction"""
         edge = luma - smoothened
 
-        """Stage 5: Sharpen_Strength"""
         sharpen = strength * edge
-        
-        """Stage 6: Shifting"""
         sharpened = sharpen >> 10
- 
-        """Stage 7: Addition"""
-        out_y = luma + sharpened
 
-        """Stage 8: Clipping"""
+        out_y = luma + sharpened
         self.img[:, :, 0] = np.uint8(np.clip(out_y, 0, 255))
         return self.img
 
