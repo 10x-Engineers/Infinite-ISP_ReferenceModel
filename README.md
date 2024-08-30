@@ -27,7 +27,7 @@ This model uses lookup tables for complex functions like Gaussian and Sigmoid, a
 
 In its current state, the model implements simple algorithm per module, with plans to incorporate RTL-friendly complex algorithms in future versions.
 
-![](docs/assets/infinite-isp-architecture-initial.png)
+![](docs/assets/infinite-isp-architecture.png)
 
 ISP pipeline for `InfiniteISP_ReferenceModel v1.0`
 
@@ -66,6 +66,7 @@ The table below provides a feature list of the model. The version `1.0` of the m
 | Gamma Correction             |Implements a LUT from config |
 | Auto Exposure                                 | [Auto Exposure](https://www.atlantis-press.com/article/25875811.pdf) <br> - AE stats calculations based on skewness |
 | Color Space Conversion                        | YCbCr digital <br> - BT 601 <br> - Bt 709  <br>   |YCbCr digital <br> - BT 601 <br> - Bt 709  <br> |
+| Sharpening                                    | Simple unsharp masking with strength control      |
 | Noise Reduction                               | [Non-local means filter](https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf) <br> - Implements intensity level difference  through a LUT|
 | RGB Conversion                               | Converts YCbCr digital image to RGB|
 | Invalid Region Crop    | Crops image to a fixed size|

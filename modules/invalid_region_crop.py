@@ -48,6 +48,8 @@ class InvalidRegionCrop:
             offset += 6
         if "2d_noise_reduction" in dut:
             offset += 4
+        if "sharpen" in dut:
+            offset += 4
 
         # indices for RTL
         self.h_idx_rtl = self.h_strat_idx + offset

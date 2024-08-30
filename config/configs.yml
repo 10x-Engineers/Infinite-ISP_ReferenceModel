@@ -15,7 +15,7 @@ sensor_info:
   height: 1536
 
 crop:
-  is_enable: false
+  is_enable: true
   is_debug: false
   new_width: 2592
   new_height: 1536
@@ -76,7 +76,7 @@ bayer_noise_reduction:
 auto_white_balance:
   is_enable: true
   is_debug: true
-  stats_window_offset: [16, 16, 16, 16]
+  stats_window_offset: [8, 8, 8, 8]
   underexposed_percentage: 5
   overexposed_percentage: 5
 
@@ -112,12 +112,18 @@ gamma_correction:
 auto_exposure:
   is_enable: true
   is_debug: true
-  stats_window_offset: [4, 4, 4, 4]
+  stats_window_offset: [12, 12, 12, 12]
   center_illuminance: 90
   histogram_skewness: 0.9
 
 color_space_conversion:
   conv_standard: 2
+  is_save: false
+
+sharpen:
+  is_enable: true
+  sharpen_sigma: 5
+  sharpen_strength: 0.9
   is_save: false
 
 2d_noise_reduction:
@@ -132,10 +138,10 @@ rgb_conversion:
 
 invalid_region_crop:
   # 1: 1920x1080, 2: 1920x1440
-  is_enable: false
-  crop_to_size: 2
-  height_start_idx: 40
-  width_start_idx: 40
+  is_enable: true
+  crop_to_size: 1
+  height_start_idx: 210
+  width_start_idx: 336
   is_debug: true
   is_save: false
 
