@@ -86,6 +86,7 @@ class Sharpening:
         # Sharpen the image with upsharp mask
         # Strength is tuneable with the sharpen_strength parameter]
         sh_str = self.parm_sha["sharpen_strength"]
+        print("Sharpen strength = ", sh_str)
         strength = int(sh_str * (2**10))
 
         edge = luma - smoothened
