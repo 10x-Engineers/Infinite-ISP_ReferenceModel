@@ -30,7 +30,6 @@ class Sharpening:
         """
         Generate a Gaussian kernel for convolutions for Sharpening Algorithm
         """
-
         if size_y is None:
             size_y = size_x
         if sigma_y is None:
@@ -48,8 +47,8 @@ class Sharpening:
         x_axis -= x_0
         y_axis -= y_0
 
-        exp_part = (x_axis**2 / (2 * sigma_x**2)) + (y_axis**2 / (2 * sigma_y**2))
-        return 1 / ((2 * np.pi * sigma_x * sigma_y) * np.exp(-exp_part))
+        exp_part = x_axis**2 / (2 * sigma_x**2) + y_axis**2 / (2 * sigma_y**2)
+        return 1 / (2 * np.pi * sigma_x * sigma_y) * np.exp(-exp_part)
 
     def apply_sharpen(self):
         """Sharpens an image using the unsharp mask algorithm.
@@ -84,7 +83,7 @@ class Sharpening:
         smoothened = correlation >> 20
 
         # Sharpen the image with upsharp mask
-        # Strength is tuneable with the sharpen_strength parameter]
+        # Strength is tuneable with the sharpen_strength parameter
         sh_str = self.parm_sha["sharpen_strength"]
         print("   - Sharpen  - strength = ", sh_str)
         strength = int(sh_str * (2**10))
