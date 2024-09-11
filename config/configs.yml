@@ -122,7 +122,7 @@ color_space_conversion:
 
 sharpen:
   is_enable: true
-  sharpen_sigma: 5
+  sharpen_sigma: 2
   sharpen_strength: 0.9
   is_save: false
 
