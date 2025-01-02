@@ -39,33 +39,33 @@ class BlackLevelCorrection:
         gr_offset = self.param_blc["gr_offset"]
         b_offset = self.param_blc["b_offset"]
 
-        r_sat = self.param_blc["r_sat"]
-        gr_sat = self.param_blc["gr_sat"]
-        gb_sat = self.param_blc["gb_sat"]
-        b_sat = self.param_blc["b_sat"]
+        r_linfact = self.param_blc["linear_r"]
+        gr_linfact = self.param_blc["linear_gr"]
+        gb_linfact = self.param_blc["linear_gb"]
+        b_linfact = self.param_blc["linear_b"]
 
         raw = np.float64(self.img)
 
         ## Get Approximates for Linearization - U16.14 precision
         # print("Approximated Linearization Factor")
-        r_linfact, r_linfact_bin = get_approximate(
-            ((2**bpp) - 1) / (r_sat - r_offset), 16, 14
-        )
-        gr_linfact, gr_linfact_bin = get_approximate(
-            ((2**bpp) - 1) / (gr_sat - gr_offset), 16, 14
-        )
-        gb_linfact, gb_linfact_bin = get_approximate(
-            ((2**bpp) - 1) / (gb_sat - gb_offset), 16, 14
-        )
-        b_linfact, b_linfact_bin = get_approximate(
-            ((2**bpp) - 1) / (b_sat - b_offset), 16, 14
-        )
+        # r_linfact, r_linfact_bin = get_approximate(
+        #     ((2**bpp) - 1) / (r_sat - r_offset), 16, 14
+        # )
+        # gr_linfact, gr_linfact_bin = get_approximate(
+        #     ((2**bpp) - 1) / (gr_sat - gr_offset), 16, 14
+        # )
+        # gb_linfact, gb_linfact_bin = get_approximate(
+        #     ((2**bpp) - 1) / (gb_sat - gb_offset), 16, 14
+        # )
+        # b_linfact, b_linfact_bin = get_approximate(
+        #     ((2**bpp) - 1) / (b_sat - b_offset), 16, 14
+        # )
 
-        if self.is_debug:
-            print("   - BLC - R linearization factor (U16.14): " + r_linfact_bin)
-            print("   - BLC - Gr linearization factor (U16.14): " + gr_linfact_bin)
-            print("   - BLC - Gb linearization factor (U16.14): " + gb_linfact_bin)
-            print("   - BLC - B linearization factor (U16.14): " + b_linfact_bin)
+        # if self.is_debug:
+        #     print("   - BLC - R linearization factor (U16.14): " + r_linfact_bin)
+        #     print("   - BLC - Gr linearization factor (U16.14): " + gr_linfact_bin)
+        #     print("   - BLC - Gb linearization factor (U16.14): " + gb_linfact_bin)
+        #     print("   - BLC - B linearization factor (U16.14): " + b_linfact_bin)
 
         if bayer == "rggb":
             # implementing this formula with condition

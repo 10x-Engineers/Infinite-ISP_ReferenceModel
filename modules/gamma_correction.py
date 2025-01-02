@@ -37,14 +37,24 @@ class GammaCorrection:
         Apply Gamma LUT on n-bit Image
         """
         # load gamma table
+        # if self.bit_depth == 8:
+        #     lut = np.uint16(np.array(self.parm_gmm["gamma_lut_8"]))
+        # elif self.bit_depth == 10:
+        #     lut = np.uint16(np.array(self.parm_gmm["gamma_lut_10"]))
+        # elif self.bit_depth == 12:
+        #     lut = np.uint16(np.array(self.parm_gmm["gamma_lut_12"]))
+        # elif self.bit_depth == 14:
+        #     lut = np.uint16(np.array(self.parm_gmm["gamma_lut_14"]))
+        # else:
+        #     print("LUT is not available for the given bit depth.")
         if self.bit_depth == 8:
-            lut = np.uint16(np.array(self.parm_gmm["gamma_lut_8"]))
+            lut = np.uint16(np.array(self.parm_gmm["gamma_lut"]))
         elif self.bit_depth == 10:
-            lut = np.uint16(np.array(self.parm_gmm["gamma_lut_10"]))
+            lut = np.uint16(np.array(self.parm_gmm["gamma_lut"]))
         elif self.bit_depth == 12:
-            lut = np.uint16(np.array(self.parm_gmm["gamma_lut_12"]))
+            lut = np.uint16(np.array(self.parm_gmm["gamma_lut"]))
         elif self.bit_depth == 14:
-            lut = np.uint16(np.array(self.parm_gmm["gamma_lut_14"]))
+            lut = np.uint16(np.array(self.parm_gmm["gamma_lut"]))
         else:
             print("LUT is not available for the given bit depth.")
 

@@ -110,16 +110,18 @@ class InfiniteISP:
 
         # Load Raw
         if path_object.suffix == ".raw":
-            if bit_depth > 8:
-                self.raw = np.fromfile(raw_path, dtype=np.uint16).reshape(
-                    (height, width)
-                )
-            else:
-                self.raw = (
-                    np.fromfile(raw_path, dtype=np.uint8)
-                    .reshape((height, width))
-                    .astype(np.uint16)
-                )
+            # if bit_depth > 8:
+            #     self.raw = np.fromfile(raw_path, dtype=np.uint16).reshape(
+            #         (height, width)
+            #     )
+            # else:
+            #     self.raw = (
+            #         np.fromfile(raw_path, dtype=np.uint8)
+            #         .reshape((height, width))
+            #         .astype(np.uint16)
+            #     )
+            self.raw = np.fromfile(raw_path, dtype=np.uint32).reshape(
+                (height, width)).astype(np.uint16)
         else:
             img = rawpy.imread(raw_path)
             self.raw = img.raw_image

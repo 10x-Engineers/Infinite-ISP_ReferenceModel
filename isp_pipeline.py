@@ -8,8 +8,8 @@ Author: 10xEngineers Pvt Ltd
 
 from infinite_isp import InfiniteISP
 
-CONFIG_PATH = "./config/configs.yml"
-RAW_DATA = "./in_frames/normal"
+CONFIG_PATH = "./tb/include/Infinite-ISP_ReferenceModel/config/configs.yml"
+RAW_DATA = "./tb/include/Infinite-ISP_ReferenceModel/in_frames/normal"
 FILENAME = None
 
 if __name__ == "__main__":

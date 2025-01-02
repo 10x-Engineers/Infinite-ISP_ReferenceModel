@@ -60,6 +60,9 @@ class NoiseReduction2d:
         """
         Applying Non-local Means Filter
         """
+        diff_value = np.uint8(np.array(self.parm_2dnr["diff_value"]))
+        weights = np.uint8(np.array(self.parm_2dnr["wts"]))
+        
         # Input YUV image
         in_image = self.img
 
@@ -88,7 +91,8 @@ class NoiseReduction2d:
         # will have the largest weight_for_each_shifted_array)
         # weights_lut = self.get_weights()
         no_of_levels = 32  # it can be 256 to utilize the full difference range
-        curve = self.make_weighted_curve(no_of_levels)
+        # curve = self.make_weighted_curve(no_of_levels)
+        curve = np.vstack((diff_value, weights)).T
 
         if self.save_lut:
             # Writing weight coefficients to the file

@@ -308,9 +308,9 @@ class SaveOutput:
     """Class to save module or pipeline output"""
 
     def __init__(self):
-        self.pipleine_outpath = Path("./out_frames")
-        self.module_outpath = Path("./out_frames/module_output")
-        self.config_outpath = Path("./out_frames")
+        self.pipleine_outpath = Path("./tb/include/Infinite-ISP_ReferenceModel/out_frames")
+        self.module_outpath = Path("./tb/include/Infinite-ISP_ReferenceModel/out_frames/module_output")
+        self.config_outpath = Path("./tb/include/Infinite-ISP_ReferenceModel/out_frames")
         self.create_out_dirs()
 
     def create_out_dirs(self):
@@ -336,10 +336,20 @@ class SaveOutput:
         # filename identifies input image and isp pipeline module for which the output
         # array is saved
         filename = self.module_outpath / (module_name + img_name.split(".")[0])
+        if output_array.ndim == 3:
+            filename2 = self.module_outpath / (module_name + img_name.split(".")[0] + "2")
+            filename3 = self.module_outpath / (module_name + img_name.split(".")[0] + "3")
 
         if platform["save_format"] == "npy" or platform["save_format"] == "both":
             # save image as npy array
-            np.save(filename, output_array.astype("uint16"))
+            # np.save(filename, output_array.astype("uint16"))
+            if output_array.ndim == 3:
+                np.savetxt(filename, output_array.astype("uint16")[:, :, 0], fmt='%d')
+                np.savetxt(filename2, output_array.astype("uint16")[:, :, 1], fmt='%d')
+                np.savetxt(filename3, output_array.astype("uint16")[:, :, 2], fmt='%d')
+            else:
+                np.savetxt(filename, output_array.astype("uint16"), fmt='%d')
+            # output_array.astype("uint16").tofile(filename)
 
         if platform["save_format"] == "png" or platform["save_format"] == "both":
             # convert image to 8-bit image if required
@@ -358,10 +368,19 @@ class SaveOutput:
         # filename identifies input image and isp pipeline module for which the output
         # array is saved
         filename = self.module_outpath / (module_name + img_name.split(".")[0])
+        if output_array.ndim == 3:
+            filename2 = self.module_outpath / (module_name + img_name.split(".")[0] + "2")
+            filename3 = self.module_outpath / (module_name + img_name.split(".")[0] + "3")
 
         # save image as .npy array
         if platform["save_format"] == "npy" or platform["save_format"] == "both":
-            np.save(filename, output_array.astype("uint16"))
+            # np.save(filename, output_array.astype("uint16"))
+            if output_array.ndim == 3:
+                np.savetxt(filename, output_array.astype("uint16")[:, :, 0], fmt='%d')
+                np.savetxt(filename2, output_array.astype("uint16")[:, :, 1], fmt='%d')
+                np.savetxt(filename3, output_array.astype("uint16")[:, :, 2], fmt='%d')
+            else:
+                np.savetxt(filename, output_array.astype("uint16"), fmt='%d')
 
         # save image as .png
         if platform["save_format"] == "png" or platform["save_format"] == "both":

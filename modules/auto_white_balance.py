@@ -24,8 +24,8 @@ class AutoWhiteBalance:
         self.bit_depth = sensor_info["bit_depth"]
         self.is_debug = parm_awb["is_debug"]
         self.stats_window_offset = np.array(parm_awb["stats_window_offset"])
-        self.underexposed_percentage = parm_awb["underexposed_percentage"]
-        self.overexposed_percentage = parm_awb["overexposed_percentage"]
+        self.underexposed_limit = parm_awb["underexposed_limit"]
+        self.overexposed_limit = parm_awb["overexposed_limit"]
         self.flatten_raw = None
         self.bayer = self.sensor_info["bayer_pattern"]
 
@@ -47,17 +47,17 @@ class AutoWhiteBalance:
 
         self.raw = self.apply_window_offset_crop()
 
-        max_pixel_value = (2**self.bit_depth) - 1
-        # appox_percenntage, _ = get_approximate(max_pixel_value / 100, 16, 8)
-        delta_overexposed = np.uint16(
-            max_pixel_value * (self.overexposed_percentage / 100)
-        )
-        delta_underexposed = np.uint16(
-            max_pixel_value * (self.underexposed_percentage / 100)
-        )
+        # max_pixel_value = (2**self.bit_depth) - 1
+        # # appox_percenntage, _ = get_approximate(max_pixel_value / 100, 16, 8)
+        # delta_overexposed = np.uint16(
+        #     max_pixel_value * (self.overexposed_percentage / 100)
+        # )
+        # delta_underexposed = np.uint16(
+        #     max_pixel_value * (self.underexposed_percentage / 100)
+        # )
         # Removed overexposed and underexposed pixels for wb gain calculation
-        overexposed_limit = np.uint16(max_pixel_value - delta_overexposed)
-        underexposed_limit = np.uint16(delta_underexposed)
+        overexposed_limit = np.uint16(self.overexposed_limit) #np.uint16(max_pixel_value - delta_overexposed)
+        underexposed_limit = np.uint16(self.underexposed_limit) #np.uint16(delta_underexposed)
 
         if self.is_debug:
             print("   - AWB - Underexposed Pixel Limit = ", underexposed_limit)

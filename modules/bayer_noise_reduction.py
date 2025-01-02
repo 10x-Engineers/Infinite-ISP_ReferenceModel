@@ -44,17 +44,35 @@ class BayerNoiseReduction:
         # extract BNR parameters
         filt_size = self.parm_bnr["filter_window"]
         # s stands for spatial kernel parameters, r stands for range kernel parameters
-        stddev_s_red, stddev_r_red = (
-            self.parm_bnr["r_std_dev_s"],
-            self.parm_bnr["r_std_dev_r"],
+        # stddev_s_red, stddev_r_red = (
+        #     self.parm_bnr["r_std_dev_s"],
+        #     self.parm_bnr["r_std_dev_r"],
+        # )
+        # stddev_s_green, stddev_r_green = (
+        #     self.parm_bnr["g_std_dev_s"],
+        #     self.parm_bnr["g_std_dev_r"],
+        # )
+        # stddev_s_blue, stddev_r_blue = (
+        #     self.parm_bnr["b_std_dev_s"],
+        #     self.parm_bnr["b_std_dev_r"],
+        # )
+
+        kern_s_red, kern_s_green, kern_s_blue = (
+            np.uint8(np.array(self.parm_bnr["space_kern_r"])),
+            np.uint8(np.array(self.parm_bnr["space_kern_g"])),
+            np.uint8(np.array(self.parm_bnr["space_kern_b"])),
         )
-        stddev_s_green, stddev_r_green = (
-            self.parm_bnr["g_std_dev_s"],
-            self.parm_bnr["g_std_dev_r"],
+        color_curve_x_red, color_curve_y_red = (
+            np.uint16(np.array(self.parm_bnr["color_curve_x_r"])),
+            np.uint8(np.array(self.parm_bnr["color_curve_y_r"])),
         )
-        stddev_s_blue, stddev_r_blue = (
-            self.parm_bnr["b_std_dev_s"],
-            self.parm_bnr["b_std_dev_r"],
+        color_curve_x_green, color_curve_y_green = (
+            np.uint16(np.array(self.parm_bnr["color_curve_x_g"])),
+            np.uint8(np.array(self.parm_bnr["color_curve_y_g"])),
+        )
+        color_curve_x_blue, color_curve_y_blue = (
+            np.uint16(np.array(self.parm_bnr["color_curve_x_b"])),
+            np.uint8(np.array(self.parm_bnr["color_curve_y_b"])),
         )
 
         # assuming image is in 12-bit range, converting to [0 1] range
@@ -170,9 +188,10 @@ class BayerNoiseReduction:
             in_img_r,
             interp_g_at_r,
             filt_size_r,
-            stddev_s_red,
+            kern_s_red,
             filt_size_r,
-            stddev_r_red,
+            color_curve_x_red,
+            color_curve_y_red,
             2,
             "R",
         )
@@ -180,9 +199,10 @@ class BayerNoiseReduction:
             interp_g,
             interp_g,
             filt_size_g,
-            stddev_s_green,
+            kern_s_green,
             filt_size_g,
-            stddev_r_green,
+            color_curve_x_green,
+            color_curve_y_green,
             1,
             "G",
         )
@@ -190,9 +210,10 @@ class BayerNoiseReduction:
             in_img_b,
             interp_g_at_b,
             filt_size_b,
-            stddev_s_blue,
+            kern_s_blue,
             filt_size_b,
-            stddev_r_blue,
+            color_curve_x_blue,
+            color_curve_y_blue,
             2,
             "B",
         )
@@ -324,9 +345,10 @@ class BayerNoiseReduction:
         in_img,
         guide_img,
         spatial_kern,
-        stddev_s,
+        kern_s,
         range_kern,
-        stddev_r,
+        color_curve_x,
+        color_curve_y,
         stride,
         channel_name,
     ):
@@ -336,25 +358,25 @@ class BayerNoiseReduction:
 
         # determining color curve
         bpp = self.sensor_info["bit_depth"]
-        curve = self.x_bf_make_color_curve(
-            9, 2 * stddev_r * (2**bpp - 1), stddev_r * (2**bpp - 1), 255
-        )  # 255 is the scaling factor
+        # curve = self.x_bf_make_color_curve(
+        #     9, 2 * stddev_r * (2**bpp - 1), stddev_r * (2**bpp - 1), 255
+        # )  # 255 is the scaling factor
+        curve = np.vstack((color_curve_x, color_curve_y)).T
+        # if self.save_lut:
+        #     folder_name = "coefficients/BNR"
 
-        if self.save_lut:
-            folder_name = "coefficients/BNR"
-
-            if not os.path.exists(folder_name):
-                os.makedirs(folder_name)
-            create_coeff_file(
-                np.flip(curve[:, 0]),
-                "coefficients/BNR/color_curve_diff_" + str(stddev_r) + channel_name,
-                bpp,
-            )
-            create_coeff_file(
-                np.flip(curve[:, 1]),
-                "coefficients/BNR/color_curve_weights_" + str(stddev_r) + channel_name,
-                8,
-            )
+        #     if not os.path.exists(folder_name):
+        #         os.makedirs(folder_name)
+        #     create_coeff_file(
+        #         np.flip(curve[:, 0]),
+        #         "coefficients/BNR/color_curve_diff_" + str(stddev_r) + channel_name,
+        #         bpp,
+        #     )
+        #     create_coeff_file(
+        #         np.flip(curve[:, 1]),
+        #         "coefficients/BNR/color_curve_weights_" + str(stddev_r) + channel_name,
+        #         8,
+        #     )
 
         # check if filter window sizes spatial_kern and range_kern greater than zero and are odd
         if spatial_kern <= 0:
@@ -388,22 +410,24 @@ class BayerNoiseReduction:
             range_kern = spatial_kern
 
         # spawn a NxN gaussian kernel
-        s_kern = self.gauss_kern_raw(spatial_kern, stddev_s, stride)
-        s_kern = np.uint8(
-            255 * s_kern + 0.5
-        )  # scaling by a factor and adding an offset
-        if self.save_lut:
-            create_coeff_file(
-                s_kern,
-                "coefficients/BNR/s_kern"
-                + str(spatial_kern)
-                + "x"
-                + str(spatial_kern)
-                + "_"
-                + str(stddev_s)
-                + channel_name,
-                8,
-            )
+        # s_kern = self.gauss_kern_raw(spatial_kern, stddev_s, stride)
+        # s_kern = np.uint8(
+        #     255 * s_kern + 0.5
+        # )  # scaling by a factor and adding an offset
+        kern_s = kern_s.reshape(5, 5)
+        s_kern = kern_s
+        # if self.save_lut:
+        #     create_coeff_file(
+        #         s_kern,
+        #         "coefficients/BNR/s_kern"
+        #         + str(spatial_kern)
+        #         + "x"
+        #         + str(spatial_kern)
+        #         + "_"
+        #         + str(stddev_s)
+        #         + channel_name,
+        #         8,
+        #     )
 
         # pad the image with half arm length of the kernel;
         # padType='constant' => pad value = 0; 'reflect' is more suitable

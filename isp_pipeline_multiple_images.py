@@ -10,10 +10,10 @@ from infinite_isp import InfiniteISP
 
 from util.config_utils import parse_file_name, extract_raw_metadata
 
-DATASET_PATH = "./in_frames/normal/data/"
-CONFIG_PATH = "./config/configs.yml"
-VIDEO_MODE = False
-EXTRACT_SENSOR_INFO = True
+CONFIG_PATH = "./tb/include/Infinite-ISP_ReferenceModel/config/configs.yml"
+DATASET_PATH = "./tb/include/Infinite-ISP_ReferenceModel/in_frames/normal/"
+VIDEO_MODE = True
+EXTRACT_SENSOR_INFO = False
 UPDATE_BLC_WB = True
 
 
