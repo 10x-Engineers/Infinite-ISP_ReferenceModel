@@ -24,6 +24,7 @@ class ColorSpaceConversion:
     def __init__(self, img, platform, sensor_info, parm_csc, save_out_obj):
         self.img = img.copy()
         self.is_save = parm_csc["is_save"]
+        self.is_enable = parm_csc["is_enable"]
         self.platform = platform
         self.sensor_info = sensor_info
         self.parm_csc = parm_csc
@@ -101,11 +102,15 @@ class ColorSpaceConversion:
         """
         Execute Color Space Conversion
         """
-        print("Color Space Conversion (default) = True")
+        print("Color Space Conversion = " + str(self.is_enable))
 
-        start = time.time()
-        csc_out = self.rgb_to_yuv_8bit()
-        print(f"  Execution time: {time.time() - start:.3f}s")
-        self.img = csc_out
+        if self.is_enable is True:
+            start = time.time()
+            csc_out = self.rgb_to_yuv_8bit()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = csc_out
+        else:
+            print(f"   - CSC - CSC should be enabled to obtain a meaningful output.")
+
         self.save()
         return self.img

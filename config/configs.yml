@@ -49,6 +49,7 @@ oecf:
   is_save: false
 
 digital_gain:
+  is_enable: true
   is_debug: true
   is_auto: true
   # Array of pre-define Gains
@@ -89,6 +90,7 @@ white_balance:
   is_save: false
 
 demosaic:
+  is_enable: true
   is_save: false
 
 color_correction_matrix:
@@ -117,6 +119,7 @@ auto_exposure:
   histogram_skewness: 0.9
 
 color_space_conversion:
+  is_enable: true
   conv_standard: 2
   is_save: false
 

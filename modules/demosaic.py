@@ -16,6 +16,7 @@ class Demosaic:
     def __init__(self, img, platform, sensor_info, parm_dem, save_out_obj):
         self.img = img.copy()
         self.is_save = parm_dem["is_save"]
+        self.is_enable = parm_dem["is_enable"]
         self.platform = platform
         self.sensor_info = sensor_info
         self.bayer = sensor_info["bayer_pattern"]
@@ -215,10 +216,19 @@ class Demosaic:
         """
         Applying demosaicing to bayer image
         """
-        print("CFA interpolation (default) = True")
-        start = time.time()
-        cfa_out = self.apply_cfa()
-        print(f"  Execution time: {time.time() - start:.3f}s")
-        self.img = cfa_out
+  
+        print("CFA interpolation = " + str(self.is_enable))
+        if self.is_enable is True:
+        
+            start = time.time()
+            cfa_out = self.apply_cfa()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = cfa_out
+        
+        else:
+            print(f"   - CFA - Demosaic should be enabled to obtain a meaningful output.")
+            # Replicate the raw to create 3 channel array
+            self.img = np.stack([self.img]*3, axis=-1)
+
         self.save()
         return self.img

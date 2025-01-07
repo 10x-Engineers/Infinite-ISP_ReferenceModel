@@ -49,8 +49,9 @@ oecf:
   is_save: False
 
 digital_gain:
-  is_debug: True
-  is_auto: True
+  is_enable: true
+  is_debug: true
+  is_auto: true
   # Array of pre-define Gains
   gain_array: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
               21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
@@ -90,7 +91,8 @@ white_balance:
   is_save: False
 
 demosaic:
-  is_save: False
+  is_enable: true
+  is_save: false
 
 color_correction_matrix:
   is_enable: True
@@ -120,8 +122,15 @@ auto_exposure:
   is_save: False
 
 color_space_conversion:
+  is_enable: true
   conv_standard: 2
-  is_save: False
+  is_save: false
+
+sharpen:
+  is_enable: true
+  sharpen_sigma: 2
+  sharpen_strength: 0.9
+  is_save: false
 
 2d_noise_reduction:
   is_enable: True

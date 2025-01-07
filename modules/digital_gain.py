@@ -18,6 +18,7 @@ class DigitalGain:
     def __init__(self, img, platform, sensor_info, parm_dga, save_out_obj):
         self.img = img.copy()
         self.is_save = parm_dga["is_save"]
+        self.is_enable = parm_dga["is_enable"]
         self.is_debug = parm_dga["is_debug"]
         self.is_auto = parm_dga["is_auto"]
         self.gains_array = parm_dga["gain_array"]
@@ -83,12 +84,13 @@ class DigitalGain:
         """
         Execute Digital Gain Module
         """
-        print("Digital Gain (default) = True ")
-
-        # ae_correction indicated if the gain is default digital gain or AE-correction gain.
-        start = time.time()
-        dg_out = self.apply_digital_gain()
-        print(f"  Execution time: {time.time() - start:.3f}s")
-        self.img = dg_out
+        print("Digital Gain = " + str(self.is_enable))
+        if self.is_enable is True:    
+            # ae_correction indicated if the gain is default digital gain or AE-correction gain.
+            start = time.time()
+            dg_out = self.apply_digital_gain()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = dg_out
+            
         self.save()
         return self.img, self.current_gain
