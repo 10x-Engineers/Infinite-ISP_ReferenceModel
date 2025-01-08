@@ -116,10 +116,14 @@ class Sharpening:
         print("Sharpen = " + str(self.enable))
 
         if self.enable is True:
-            start = time.time()
-            s_out = self.apply_sharpen()
-            print(f"  Execution time: {time.time() - start:.3f}s")
-            self.img = s_out
+            if self.platform["rgb_output"]:
+                print("   - Invalid input for Sharpen: RGB image format.")
+                self.parm_sha["is_enable"] = False
+            else:    
+                start = time.time()
+                s_out = self.apply_sharpen()
+                print(f"  Execution time: {time.time() - start:.3f}s")
+                self.img = s_out
 
         self.save()
         return self.img

@@ -109,8 +109,6 @@ class ColorSpaceConversion:
             csc_out = self.rgb_to_yuv_8bit()
             print(f"  Execution time: {time.time() - start:.3f}s")
             self.img = csc_out
-        else:
-            print(f"   - CSC - CSC should be enabled to obtain a meaningful output.")
 
         self.save()
         return self.img

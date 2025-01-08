@@ -226,7 +226,7 @@ class Demosaic:
             self.img = cfa_out
         
         else:
-            print(f"   - CFA - Demosaic should be enabled to obtain a meaningful output.")
+            print(f"   - CFA - Demosaic should be enabled to obtain RGB output.")
             # Replicate the raw to create 3 channel array
             self.img = np.stack([self.img]*3, axis=-1)
 

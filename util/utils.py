@@ -385,6 +385,13 @@ class SaveOutput:
         Saves the output image (png) and config file at pipleine_outpath
         """
 
+        # convert to 8bit img
+        max_val = int(np.max(output_img))
+        if max_val > 255:
+            norm_img = np.float32(output_img)/max_val
+            output_img = np.uint8(np.clip(norm_img*255, 0, 255))
+
+
         # Time Stamp for output filename
         dt_string = datetime.now().strftime("_%Y%m%d_%H%M%S")
 

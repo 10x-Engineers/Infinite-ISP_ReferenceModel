@@ -87,7 +87,7 @@ class InfiniteISP:
         self.parm_osd = c_yaml["on_screen_display"]
         self.c_yaml = c_yaml
 
-        self.platform["rgb_output"] = self.parm_rgb["is_enable"]
+        self.platform["rgb_output"] = not(self.parm_csc["is_enable"] and not(self.parm_rgb["is_enable"]))
 
         return c_yaml
 
@@ -344,36 +344,23 @@ class InfiniteISP:
         # ======================================================================
         # Is not part of ISP-pipeline only assists in visualizing output results
         if visualize_output:
-            # There can be two out_img formats depending upon which modules are
-            # enabled 1. YUV    2. RGB
+            # if CSC if enabled and RGB_C is disabled, convert yuv to RGB
+            if self.parm_csc["is_enable"] is True and self.parm_rgb["is_enable"] is False:
+                if self.parm_yuv["is_enable"] is True:
+                    # YUV_C is enabled and RGB_C is disabled: Output is compressed YUV
+                    # To display : Need to decompress it and convert it to RGB.
+                    image_height, image_width, _ = out_dim
+                    yuv_custom_format = self.parm_yuv["conv_type"]
 
-            if self.parm_yuv["is_enable"] is True:
-                # YUV_C is enabled and RGB_C is disabled: Output is compressed YUV
-                # To display : Need to decompress it and convert it to RGB.
-                image_height, image_width, _ = out_dim
-                yuv_custom_format = self.parm_yuv["conv_type"]
-
-                yuv_conv = util.get_image_from_yuv_format_conversion(
-                    yuv_conv, image_height, image_width, yuv_custom_format
-                )
+                    yuv_conv = util.get_image_from_yuv_format_conversion(
+                        yuv_conv, image_height, image_width, yuv_custom_format
+                    )
 
                 rgbc.yuv_img = yuv_conv
                 out_rgb = rgbc.yuv_to_rgb()
 
-            # elif self.parm_rgb["is_enable"] is False:
-            #     # RGB_C is disabled: Output is 3D - YUV
-            #     # To display : Only convert it to RGB
-            #     rgbc.yuv_img = yuv_conv
-            #     out_rgb = rgbc.yuv_to_rgb()
-
-            # else:
-                # RGB_C is enabled: Output is RGB
-                # no further processing is needed for display
             else:
                 out_rgb = out_img
-
-            # If both RGB_C and YUV_C are enabled. Infinite-ISP will generate
-            # an output but it will be an invalid image.
 
             self.save_output_obj.save_pipeline_output(
                 self.out_file, out_rgb, self.c_yaml
