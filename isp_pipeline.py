@@ -9,7 +9,7 @@ Author: 10xEngineers Pvt Ltd
 from infinite_isp import InfiniteISP
 
 CONFIG_PATH = "./config/configs.yml"
-RAW_DATA = "./in_frames/normal/data"
+RAW_DATA = "./in_frames/normal"
 FILENAME = None
 
 if __name__ == "__main__":
