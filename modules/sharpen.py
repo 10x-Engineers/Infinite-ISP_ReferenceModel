@@ -9,6 +9,7 @@ import time
 import os
 import numpy as np
 from scipy import ndimage
+from util.utils import create_coeff_file
 
 class Sharpening:
     """
@@ -50,6 +51,31 @@ class Sharpening:
 
         self.save()
         return self.img
+    
+    def gaussian_kernel(self, size_x, size_y=None, sigma_x=5, sigma_y=None):
+        """
+        Generate a Gaussian kernel for convolutions for Sharpening Algorithm
+        """
+        if size_y is None:
+            size_y = size_x
+        if sigma_y is None:
+            sigma_y = sigma_x
+
+        assert isinstance(size_x, int)
+        assert isinstance(size_y, int)
+
+        x_0 = size_x // 2
+        y_0 = size_y // 2
+
+        x_axis = np.arange(0, size_x, dtype=float)  # x_axis range [0:size_x]
+        y_axis = np.arange(0, size_y, dtype=float)[:, np.newaxis]
+
+        x_axis -= x_0
+        y_axis -= y_0
+
+        exp_part = x_axis**2 / (2 * sigma_x**2) + y_axis**2 / (2 * sigma_y**2)
+        return 1 / (2 * np.pi * sigma_x * sigma_y) * np.exp(-exp_part)
+
 
     def apply_sharpen(self):
         """
@@ -57,24 +83,42 @@ class Sharpening:
         """
         self.sharpen_sigma = self.parm_sha["sharpen_sigma"]
         self.sharpen_strength = self.parm_sha["sharpen_strength"]
+        kernel_size = 9
+        kernel = self.gaussian_kernel(kernel_size, kernel_size, self.sharpen_sigma , self.sharpen_sigma )
 
-
-        luma = np.float32(self.img[:, :, 0])
-
-        # if self.img.dtype == "float32":
-        #     luma = np.round(255 * luma).astype(np.uint8)
+        # Approximate the kernel to 20 bits
+        kernel = (kernel * (2**20)).astype(np.int32)
+        
+        folder_name = "coefficients/SHARP"
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+        create_coeff_file(kernel, "coefficients/SHARP/luma_kernel", 20)
+        print("   - Sharpen  - Approximated coeff = coefficients/SHARP/luma_kernel")
+        
+        # take out the luminance channel
+        luma = (self.img[:, :, 0]).astype(np.int32)
 
         # Filter the luma component of the image with a Gaussian LPF
-        # Smoothing magnitude can be controlled with the sharpen_sigma parameter
-        smoothened = ndimage.gaussian_filter(luma, self.sharpen_sigma)
+        correlation = ndimage.correlate(luma, kernel, mode='constant', cval=0.0, origin=0)
+
+        # Get the approximated high freq component
+        smoothened = correlation >> 20
+        edge = luma - smoothened
+
         # Sharpen the image with upsharp mask
         # Strength is tuneable with the sharpen_strength parameter
-        sharpened = luma + ((luma - smoothened) * self.sharpen_strength)
+        print("   - Sharpen  - strength = ", self.sharpen_strength)
+        # get the approximately weighted high freq comp
+        strength = int(self.sharpen_strength * (2**10))
+        print("   - Sharpen  - strength (approx) = ", strength)
 
-        if self.img.dtype == "float32":
-            # sharpened = np.float32((sharpened) / 255.0)
-            # out = sharpened.astype("float32")
-            self.img[:, :, 0] = np.clip(sharpened, 0, 1)
-        else:
-            self.img[:, :, 0] = np.uint8(np.clip(sharpened, 0, 255))
-        return self.img 
+
+        sharpen = strength * edge
+        sharpened = sharpen >> 10
+
+        # add the high freq component
+        out_y = luma + sharpened
+        
+        # Finally clip the image to max
+        self.img[:, :, 0] = np.uint8(np.clip(out_y, 0, 255))
+        return self.img
