@@ -123,6 +123,12 @@ color_space_conversion:
   conv_standard: 2
   is_save: false
 
+sharpen:
+  is_enable: true
+  sharpen_sigma: 2
+  sharpen_strength: 0.9
+  is_save: false
+
 2d_noise_reduction:
   is_enable: True
   window_size: 5

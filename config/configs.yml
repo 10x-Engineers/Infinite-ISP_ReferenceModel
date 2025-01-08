@@ -1,5 +1,5 @@
 platform:
-  filename: ColorChecker_2592x1536_10bit_GRBG.raw
+  filename: Indoor1_2592x1536_10bit_GRBG.raw
   disable_progress_bar: false
   leave_pbar_string: false
   save_lut: false
