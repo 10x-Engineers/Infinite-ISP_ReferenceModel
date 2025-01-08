@@ -5,7 +5,7 @@ platform:
   save_lut: false
   save_format: npy
   # png # npy # both
-  render_3a: true
+  render_3a: false
 
 
 sensor_info:
@@ -86,8 +86,8 @@ white_balance:
   is_enable: True
   is_debug: true
   is_auto: True
-  r_gain: 1.768566
-  b_gain: 1.641026
+  r_gain: 1.875
+  b_gain: 2.3
   is_save: false
 
 demosaic:
