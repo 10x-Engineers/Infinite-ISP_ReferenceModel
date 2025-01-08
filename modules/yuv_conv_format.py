@@ -91,13 +91,11 @@ class YUVConvFormat:
 
         if self.enable:
             if self.platform["rgb_output"]:
-                print("   - Invalid input for YUV conversion: RGB image format.")
-                self.param_yuv["is_enable"] = False
-            else:
-                start = time.time()
-                yuv = self.convert2yuv_format()
-                print(f"  Execution time: {time.time() - start:.3f}s")
-                self.img = yuv
+                print("   - YUV Conversion Format assumes YUV input but got RGB.")
+            start = time.time()
+            yuv = self.convert2yuv_format()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = yuv
 
         self.save()
         return self.img

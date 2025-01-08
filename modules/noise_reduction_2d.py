@@ -20,7 +20,7 @@ class NoiseReduction2d:
     2D Noise Reduction
     """
 
-    def __init__(self, img, sensor_info, parm_2dnr, platform, save_out_obj):
+    def __init__(self, img, sensor_info, parm_2dnr, platform, parm_csc, save_out_obj):
         self.img = img.copy()
         self.enable = parm_2dnr["is_enable"]
         self.is_save = parm_2dnr["is_save"]
@@ -30,6 +30,8 @@ class NoiseReduction2d:
         self.is_progress = platform["disable_progress_bar"]
         self.is_leave = platform["leave_pbar_string"]
         self.save_lut = platform["save_lut"]
+        self.csc_enable = parm_csc["is_enable"]
+
         self.save_out_obj = save_out_obj
 
     def make_weighted_curve(self, n_ind):
@@ -171,6 +173,8 @@ class NoiseReduction2d:
         print("Noise Reduction 2d = " + str(self.enable))
 
         if self.enable is True:
+            if self.csc_enable is False:
+                print("   - 2DNR assumes YUV input but got RGB.")
             start = time.time()
             s_out = self.apply_nlm()
             print(f"  Execution time: {time.time() - start:.3f}s")

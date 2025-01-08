@@ -267,6 +267,7 @@ class InfiniteISP:
             self.platform,
             self.sensor_info,
             self.parm_sha,
+            self.parm_csc,
             self.save_output_obj,
         )
         sha_img = sha.execute()
@@ -278,6 +279,7 @@ class InfiniteISP:
             self.sensor_info,
             self.parm_2dn,
             self.platform,
+            self.parm_csc,
             self.save_output_obj,
         )
         nr2d_img = nr2d.execute()
@@ -345,7 +347,7 @@ class InfiniteISP:
         # Is not part of ISP-pipeline only assists in visualizing output results
         if visualize_output:
             # if CSC if enabled and RGB_C is disabled, convert yuv to RGB
-            if self.parm_csc["is_enable"] is True and self.parm_rgb["is_enable"] is False:
+            if (self.parm_csc["is_enable"] is True and self.parm_rgb["is_enable"] is False) or self.parm_yuv["is_enable"] is True:
                 if self.parm_yuv["is_enable"] is True:
                     # YUV_C is enabled and RGB_C is disabled: Output is compressed YUV
                     # To display : Need to decompress it and convert it to RGB.

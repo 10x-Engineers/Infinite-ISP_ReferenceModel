@@ -17,13 +17,14 @@ class Sharpening:
     Sharpening
     """
 
-    def __init__(self, img, platform, sensor_info, parm_sha, save_out_obj):
+    def __init__(self, img, platform, sensor_info, parm_sha, parm_csc, save_out_obj):
         self.img = img.copy()
         self.enable = parm_sha["is_enable"]
         self.sensor_info = sensor_info
         self.parm_sha = parm_sha
         self.is_save = parm_sha["is_save"]
         self.platform = platform
+        self.csc_enable = parm_csc["is_enable"]
         self.save_out_obj = save_out_obj
 
     def gaussian_kernel(self, size_x, size_y=None, sigma_x=5, sigma_y=None):
@@ -116,14 +117,12 @@ class Sharpening:
         print("Sharpen = " + str(self.enable))
 
         if self.enable is True:
-            if self.platform["rgb_output"]:
-                print("   - Invalid input for Sharpen: RGB image format.")
-                self.parm_sha["is_enable"] = False
-            else:    
-                start = time.time()
-                s_out = self.apply_sharpen()
-                print(f"  Execution time: {time.time() - start:.3f}s")
-                self.img = s_out
+            if self.csc_enable is False:
+                print("   - Sharpen assumes YUV input but got RGB.")
+            start = time.time()
+            s_out = self.apply_sharpen()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = s_out
 
         self.save()
         return self.img

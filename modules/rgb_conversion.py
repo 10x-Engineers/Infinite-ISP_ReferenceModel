@@ -30,7 +30,7 @@ class RGBConversion:
         self.is_save = self.parm_rgb["is_save"]
         self.bit_depth = sensor_info["bit_depth"]
         self.conv_std = parm_csc["conv_standard"]
-        self.csv_enable = parm_csc["is_enable"]
+        self.csc_enable = parm_csc["is_enable"]
         self.yuv_img = img
         self.yuv2rgb_mat = None
         self.save_out_obj = save_out_obj
@@ -102,13 +102,11 @@ class RGBConversion:
         
         print("RGB Conversion" + " = " + str(self.enable))
         if self.enable:
-            if self.csv_enable:
-                start = time.time()
-                rgb_out = self.yuv_to_rgb()
-                print(f"  Execution time: {time.time() - start:.3f}s")
-                self.img = rgb_out
-            else:
-                print("   - Invalid input for RGB conversion: RGB image format.")
-                self.parm_rgb["is_enable"] = False
+            if self.csc_enable is False:
+                print("   - RGB Conversion assumes YUV input but got RGB.")
+            start = time.time()
+            rgb_out = self.yuv_to_rgb()
+            print(f"  Execution time: {time.time() - start:.3f}s")
+            self.img = rgb_out
         self.save()
         return self.img
