@@ -112,7 +112,7 @@ gamma_correction:
 auto_exposure:
   is_enable: true
   is_debug: true
-  stats_window_offset: [4, 4, 4, 4]
+  stats_window_offset: [16, 16, 16, 16]
   center_illuminance: 90
   histogram_skewness: 0.9
 
