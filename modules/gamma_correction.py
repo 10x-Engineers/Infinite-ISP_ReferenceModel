@@ -76,6 +76,6 @@ class GammaCorrection:
             print(f"  Execution time: {time.time() - start:.3f}s")
             self.img = gc_out
         else:
-            self.img = self.img >> int(self.bit_depth-8)
+            self.img = np.uint8(self.img >> int(self.bit_depth-8))
         self.save()
         return self.img
