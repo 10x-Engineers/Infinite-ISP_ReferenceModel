@@ -125,6 +125,12 @@ auto_exposure:
 color_space_conversion:
   is_enable: true
   conv_standard: 2
+  is_save: False
+
+sharpen:
+  is_enable: true
+  sharpen_sigma: 2
+  sharpen_strength: 0.9
   is_save: false
   
 2d_noise_reduction:
