@@ -116,7 +116,7 @@ class Crop:
         print("Crop = " + str(self.enable))
 
         # Save the input of crop module
-        self.save("Inpipeline_crop_")
+        # self.save("Inpipeline_crop_")
 
         # crop image if enabled
         if self.enable:

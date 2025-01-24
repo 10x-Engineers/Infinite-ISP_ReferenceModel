@@ -109,6 +109,7 @@ class ColorSpaceConversion:
             csc_out = self.rgb_to_yuv_8bit()
             print(f"  Execution time: {time.time() - start:.3f}s")
             self.img = csc_out
-
+        else:
+            self.img = np.uint8(self.img >> int(self.bit_depth-8))
         self.save()
         return self.img

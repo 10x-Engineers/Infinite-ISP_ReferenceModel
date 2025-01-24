@@ -70,10 +70,11 @@ class Sharpening:
 
         kernel = (kernel * (2**20)).astype(np.int32)
 
-        folder_name = "coefficients/SHARP"
-        if not os.path.exists(folder_name):
-            os.makedirs(folder_name)
-        create_coeff_file(kernel, "coefficients/SHARP/luma_kernel", 20)
+        if self.platform["save_lut"]:
+            folder_name = "coefficients/SHARP"
+            if not os.path.exists(folder_name):
+                os.makedirs(folder_name)
+            create_coeff_file(kernel, "coefficients/SHARP/luma_kernel", 20)
 
         luma = (self.img[:, :, 0]).astype(np.int32)
 
