@@ -6,6 +6,7 @@ platform:
   save_format: npy
   # png # npy # both
   render_3a: true
+  input_3ch: true
 
 sensor_info:
   bayer_pattern: grbg

@@ -5,3 +5,4 @@ PyYAML
 rawpy
 scipy
 tqdm
+scikit-image

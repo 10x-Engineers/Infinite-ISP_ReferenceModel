@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import yaml
 import rawpy
+from skimage import io
 import util.utils as util
 
 from modules.dead_pixel_correction import DeadPixelCorrection as DPC
@@ -59,7 +60,9 @@ class InfiniteISP:
         # Extract workspace info
         self.platform = c_yaml["platform"]
         self.raw_file = self.platform["filename"]
-        self.render_3a = self.platform["render_3a"]
+        
+        # Disable render 3A if input is 3-channel
+        self.render_3a = self.platform["render_3a"] if not self.platform["input_3ch"] else False 
 
         # Extract basic sensor info
         self.sensor_info = c_yaml["sensor_info"]
@@ -88,7 +91,6 @@ class InfiniteISP:
         self.c_yaml = c_yaml
 
         self.platform["rgb_output"] = not(self.parm_csc["is_enable"] and not(self.parm_rgb["is_enable"]))
-
         return c_yaml
 
     def load_raw(self):
@@ -104,124 +106,136 @@ class InfiniteISP:
         self.platform["in_file"] = self.in_file
         self.platform["out_file"] = self.out_file
 
-        width = self.sensor_info["width"]
-        height = self.sensor_info["height"]
-        bit_depth = self.sensor_info["bit_depth"]
+        if self.platform["input_3ch"]:
+            if path_object.suffix in [".png", ".jpg"]:
+                # Load 3 channel input
+                self.input_arr_3ch = np.uint16(io.imread(raw_path))
 
-        # Load Raw
-        if path_object.suffix == ".raw":
-            if bit_depth > 8:
-                self.raw = np.fromfile(raw_path, dtype=np.uint16).reshape(
-                    (height, width)
-                )
-            else:
-                self.raw = (
-                    np.fromfile(raw_path, dtype=np.uint8)
-                    .reshape((height, width))
-                    .astype(np.uint16)
-                )
+                if self.input_arr_3ch.shape[2] == 4:
+                    # Drop the alpha channel for RGBA image
+                    self.input_arr_3ch = self.input_arr_3ch[:, :, :3]  
+
         else:
-            img = rawpy.imread(raw_path)
-            self.raw = img.raw_image
+            width = self.sensor_info["width"]
+            height = self.sensor_info["height"]
+            bit_depth = self.sensor_info["bit_depth"]
+
+            # Load Raw
+            if path_object.suffix == ".raw":
+                if bit_depth > 8:
+                    self.raw = np.fromfile(raw_path, dtype=np.uint16).reshape(
+                        (height, width)
+                    )
+                else:
+                    self.raw = (
+                        np.fromfile(raw_path, dtype=np.uint8)
+                        .reshape((height, width))
+                        .astype(np.uint16)
+                    )
+            else:
+                img = rawpy.imread(raw_path)
+                self.raw = img.raw_image
 
     def run_pipeline(self, visualize_output=True):
         """
         Run ISP-Pipeline for a raw-input image
         """
+        if not self.platform["input_3ch"]:
+            # Process Raw frame 
+            # =====================================================================
+            # Cropping
+            crop = Crop(
+                self.raw,
+                self.platform,
+                self.sensor_info,
+                self.parm_cro,
+                self.save_output_obj,
+            )
+            cropped_img = crop.execute()
 
-        # =====================================================================
-        # Cropping
-        crop = Crop(
-            self.raw,
-            self.platform,
-            self.sensor_info,
-            self.parm_cro,
-            self.save_output_obj,
-        )
-        cropped_img = crop.execute()
+            # =====================================================================
+            #  Dead pixels correction
+            dpc = DPC(
+                cropped_img,
+                self.platform,
+                self.sensor_info,
+                self.parm_dpc,
+                self.save_output_obj,
+            )
+            dpc_raw = dpc.execute()
 
-        # =====================================================================
-        #  Dead pixels correction
-        dpc = DPC(
-            cropped_img,
-            self.platform,
-            self.sensor_info,
-            self.parm_dpc,
-            self.save_output_obj,
-        )
-        dpc_raw = dpc.execute()
+            # =====================================================================
+            # Black level correction
+            blc = BLC(
+                dpc_raw,
+                self.platform,
+                self.sensor_info,
+                self.parm_blc,
+                self.save_output_obj,
+            )
+            blc_raw = blc.execute()
 
-        # =====================================================================
-        # Black level correction
-        blc = BLC(
-            dpc_raw,
-            self.platform,
-            self.sensor_info,
-            self.parm_blc,
-            self.save_output_obj,
-        )
-        blc_raw = blc.execute()
+            # =====================================================================
+            # OECF
+            oecf = OECF(
+                blc_raw,
+                self.platform,
+                self.sensor_info,
+                self.parm_oec,
+                self.save_output_obj,
+            )
+            oecf_raw = oecf.execute()
 
-        # =====================================================================
-        # OECF
-        oecf = OECF(
-            blc_raw,
-            self.platform,
-            self.sensor_info,
-            self.parm_oec,
-            self.save_output_obj,
-        )
-        oecf_raw = oecf.execute()
+            # =====================================================================
+            # Digital Gain
+            dga = DG(
+                oecf_raw,
+                self.platform,
+                self.sensor_info,
+                self.parm_dga,
+                self.save_output_obj,
+            )
+            dga_raw, self.dga_current_gain = dga.execute()
 
-        # =====================================================================
-        # Digital Gain
-        dga = DG(
-            oecf_raw,
-            self.platform,
-            self.sensor_info,
-            self.parm_dga,
-            self.save_output_obj,
-        )
-        dga_raw, self.dga_current_gain = dga.execute()
+            # =====================================================================
+            # Bayer noise reduction
+            bnr = BNR(
+                dga_raw,
+                self.platform,
+                self.sensor_info,
+                self.parm_bnr,
+                self.save_output_obj,
+            )
+            bnr_raw = bnr.execute()
 
-        # =====================================================================
-        # Bayer noise reduction
-        bnr = BNR(
-            dga_raw,
-            self.platform,
-            self.sensor_info,
-            self.parm_bnr,
-            self.save_output_obj,
-        )
-        bnr_raw = bnr.execute()
+            # =====================================================================
+            # Auto White Balance
+            awb = AWB(
+                bnr_raw,
+                self.sensor_info,
+                self.parm_awb,
+            )
+            self.awb_gains = awb.execute()
 
-        # =====================================================================
-        # Auto White Balance
-        awb = AWB(
-            bnr_raw,
-            self.sensor_info,
-            self.parm_awb,
-        )
-        self.awb_gains = awb.execute()
+            # =====================================================================
+            # White balancing
+            wbc = WB(
+                bnr_raw,
+                self.platform,
+                self.sensor_info,
+                self.parm_wbc,
+                self.save_output_obj,
+            )
+            wb_raw = wbc.execute()
 
-        # =====================================================================
-        # White balancing
-        wbc = WB(
-            bnr_raw,
-            self.platform,
-            self.sensor_info,
-            self.parm_wbc,
-            self.save_output_obj,
-        )
-        wb_raw = wbc.execute()
-
-        # =====================================================================
-        # CFA demosaicing
-        cfa_inter = Demosaic(
-            wb_raw, self.platform, self.sensor_info, self.parm_dem, self.save_output_obj
-        )
-        demos_img = cfa_inter.execute()
-
+            # =====================================================================
+            # CFA demosaicing
+            cfa_inter = Demosaic(
+                wb_raw, self.platform, self.sensor_info, self.parm_dem, self.save_output_obj
+            )
+            demos_img = cfa_inter.execute()
+        else:
+            demos_img = self.input_arr_3ch
         # =====================================================================
         # Color correction matrix
         ccm = CCM(
@@ -393,7 +407,8 @@ class InfiniteISP:
             # Run ISP-Pipeline till Correct Exposure with AWB gains
             self.execute_with_3a_statistics()
 
-        util.display_ae_statistics(self.ae_feedback, self.awb_gains)
+        if not self.platform["input_3ch"]:
+            util.display_ae_statistics(self.ae_feedback, self.awb_gains)
 
         # Print Logs to mark end of pipeline Execution
         print(50 * "-" + "\n")
