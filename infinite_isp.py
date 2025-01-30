@@ -106,15 +106,9 @@ class InfiniteISP:
         self.platform["in_file"] = self.in_file
         self.platform["out_file"] = self.out_file
 
-        if self.platform["input_3ch"]:
-            if path_object.suffix in [".png", ".jpg"]:
-                # Load 3 channel input
-                self.input_arr_3ch = np.uint16(io.imread(raw_path))
-
-                if self.input_arr_3ch.shape[2] == 4:
-                    # Drop the alpha channel for RGBA image
-                    self.input_arr_3ch = self.input_arr_3ch[:, :, :3]  
-
+        if self.platform["input_3ch"]: 
+            if path_object.suffix == ".npy":
+                self.input_arr_3ch = np.uint16(np.load(raw_path))
         else:
             width = self.sensor_info["width"]
             height = self.sensor_info["height"]

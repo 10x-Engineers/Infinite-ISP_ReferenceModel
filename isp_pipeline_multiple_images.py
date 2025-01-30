@@ -55,7 +55,7 @@ def dataset_processing():
     raw_images = [
         x
         for x in directory_content
-        if (Path(DATASET_PATH, x).suffix in [".raw", ".NEF", ".dng"])
+        if (Path(DATASET_PATH, x).suffix in [".raw", ".NEF", ".dng", ".npy"])
     ]
 
     infinite_isp = InfiniteISP(DATASET_PATH, default_config)
