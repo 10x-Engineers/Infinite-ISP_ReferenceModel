@@ -116,7 +116,7 @@ auto_exposure:
   is_enable: true
   is_debug: true
   stats_window_offset: [4, 4, 4, 4]
-  center_illuminance: 90
+  center_illuminance: 108
   histogram_skewness: 1
   is_save: false
 
