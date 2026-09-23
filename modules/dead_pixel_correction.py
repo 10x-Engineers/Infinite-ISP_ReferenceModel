@@ -10,6 +10,7 @@ import time
 import numpy as np
 from tqdm import tqdm
 from scipy.ndimage import maximum_filter, minimum_filter, correlate
+from util.utils import pad_cfa
 
 
 class DeadPixelCorrection:
@@ -28,12 +29,6 @@ class DeadPixelCorrection:
         self.threshold = parm_dpc["dp_threshold"]
         self.is_debug = parm_dpc["is_debug"]
         self.save_out_obj = save_out_obj
-
-    def padding(self):
-        """Return a mirror padded copy of image."""
-
-        img_pad = np.pad(self.img, (2, 2), "reflect")
-        return img_pad
 
     def apply_fast_dead_pixel_correction(self):
         """This function detects and corrects Dead pixels using numpy
@@ -55,8 +50,10 @@ class DeadPixelCorrection:
             ]
         )
 
-        # The maximum and minimum filters automatically pad the input image internally,
-        # eliminating the need for manual padding.
+        # Pad each CFA channel before filtering. Every pixel of the original image
+        # then has its 5x5 window inside the padded array, so the scipy "mode"
+        # below does not affect the result after the padding is removed.
+        self.img = pad_cfa(self.img)
         max_value = maximum_filter(self.img, footprint=window, mode="mirror")
         min_value = minimum_filter(self.img, footprint=window, mode="mirror")
 
@@ -147,9 +144,7 @@ class DeadPixelCorrection:
             ]
         )
 
-        # convolve each kernel over image to compute differences
-        # The correlate function automatically pads the input image internally,
-        # eliminating the need for manual padding.
+        # convolve each kernel over the CFA-padded image to compute differences
 
         diff_top_left = np.abs(correlate(self.img, ker_top_left, mode="mirror"))
         diff_top_mid = np.abs(correlate(self.img, ker_top_mid, mode="mirror"))
@@ -318,6 +313,8 @@ class DeadPixelCorrection:
         dpc_img = np.where(detection_mask, corrected_img, self.img)
 
         # Remove padding
+        dpc_img = dpc_img[2:-2, 2:-2]
+        detection_mask = detection_mask[2:-2, 2:-2]
         self.img = np.uint16(np.clip(dpc_img, 0, (2**self.bpp) - 1))
 
         if self.is_debug:
@@ -333,8 +330,8 @@ class DeadPixelCorrection:
 
         height, width = self.sensor_info["height"], self.sensor_info["width"]
 
-        # Mirror padding is applied to self.img.
-        img_padded = np.float32(self.padding())
+        # CFA-aware padding is applied to self.img.
+        img_padded = np.float32(pad_cfa(self.img))
         dpc_img = np.empty((height, width), np.float32)
         corrected_pv_count = 0
 
