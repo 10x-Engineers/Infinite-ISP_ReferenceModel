@@ -82,10 +82,49 @@ Below parameters are present each ISP pipeline module they effect the functional
 | digital_gain    | Details |
 | -----------     |   ---   |
 | is_enable       | This is an essential module and cannot be disabled 
-| is_auto         | Flag to calculate digital gain using AE Feedback
+| is_auto         | Flag to let the 3A - Auto Exposure control choose `current_gain` for the next frame
 | gain_array      | Gains array. List of permissible digital gains |
 | current_gain    | Index for the current gain in gain_array. It starts from zero |
-| ae_feedback| AE feedback, it has only following values <br> - `1` (Overexposed)  <br> - `-1` (Underexposed)  <br> - `0` (Correct Exposure) |
+
+### 3A - Auto Exposure Statistics
+
+The HDR-ISP AE statistics block (RTL `axis_ae_stat`), on the raw after digital gain. Per cell of a 3x3 grid it counts green pixels below `shadow_threshold` and above `highlight_threshold`, sums the green pixel values (32-bit, saturating) and counts the pixels of every channel at 0 and at full scale (32-bit counters). Comparisons are strict.
+
+| auto_exposure_stats  | Details |
+| -----------          |   ---   |
+| is_enable            | When enabled computes the AE statistics. Must be enabled for the 3A - Auto Exposure control |
+| col_starts           | 4 ascending column boundaries of the grid in pixels, the last closing the grid, e.g. `[0, 864, 1728, 2592]`. Cells are `[start, next start)` |
+| row_starts           | 4 ascending row boundaries of the grid in pixels, e.g. `[0, 512, 1024, 1536]` |
+| shadow_threshold     | Green pixels below it are counted as shadows (DN at the sensor bit depth) |
+| highlight_threshold  | Green pixels above it are counted as highlights (DN at the sensor bit depth) |
+| is_save              | Saves the per-cell statistics as a txt file |
+
+### 3A - Auto Exposure
+
+The HDR-ISP AE control law (`ae_ctrl.c`, EV law) as an RTL block, in integer arithmetic. It meters a clip-corrected, centre-weighted green mean from the statistics, computes the exposure error `log2(target_mean) - log2(mean)` in Q8 EV (256 = 1 EV), caps it when the highlight or clip fraction is over budget, never darkens a mostly dark frame, and makes a damped, slew-limited move inside a deadband with hysteresis. The move picks the nearest gain in `digital_gain.gain_array` for the next frame. A target between two gains settles on one of them (the smaller error, never a brighter gain that breaks the highlight / clip budget) instead of alternating, until the scene changes. In `render_3a` the pipeline re-runs until the gain holds.
+
+Hardware: the block runs once per frame, during vertical blanking, after the statistics block latches the frame's statistics; its gain applies from the next frame. It has one shared divider (at most 17 divisions per frame) and a Q8 log2 unit. The register widths and internal bit widths are listed in [modules/auto_exposure.py](../modules/auto_exposure.py). With the block enabled, `digital_gain.gain_array` is its gain table: at most 128 gains, each a multiple of 1/256 from 1/256 to 255.996.
+
+| auto_exposure      | Register | Details |
+| -----------        | ---      |   ---   |
+| is_enable          |          | When enabled applies the 3A - Auto Exposure control |
+| target_mean        | bit_depth bits, 1 .. 2^bit_depth - 1 | Metered green mean to reach (DN at the sensor bit depth) |
+| valid_min_pct      | 7 bits, 0 .. 100 | A grid cell needs this % of unclipped greens to be metered |
+| grid_weights       | 9 x 8 bits, 0 .. 255 | 9 metering weights, cell index = row * 3 + col |
+| ev_deadband        | 10 bits, 0 .. 1023 | Errors within it (Q8 EV) do not move the gain |
+| ev_hyst            | 10 bits, 0 .. 1023 | Extra deadband (Q8 EV) once converged |
+| ev_damp            | 7 bits, 0 .. 100 | % of the error moved per frame |
+| ev_damp_fast       | 7 bits, 0 .. 100 | % of the error moved on a scene change |
+| ev_slew_max        | 12 bits, 1 .. 4095 | Largest move per frame (Q8 EV) |
+| ev_slew_fast       | 12 bits, 1 .. 4095 | Largest move on a scene change (Q8 EV) |
+| scene_change_ev    | 12 bits, 0 .. 4095 | An error above it (Q8 EV) is a scene change |
+| vm_iir_a           | 7 bits, 1 .. 100 | % IIR on the metered mean between frames (bypassed in `render_3a`) |
+| hi_frac_pm         | 10 bits, 0 .. 1000 | Highlight budget: greens above `highlight_threshold`, per mille |
+| hi_k               | 8 bits, 0 .. 255 | % strength of the highlight cap |
+| clip_frac_pm       | 10 bits, 0 .. 1000 | Clip budget: pixels at full scale, per mille |
+| clip_k             | 8 bits, 0 .. 255 | % strength of the clip cap |
+| dark_frac_pm       | 10 bits, 0 .. 1000 | Above this shadow fraction (per mille) the frame is never made darker |
+| ev_max_pull        | 12 bits, 0 .. 4095 | The caps may pull at most this much (Q8 EV) below the mean's request |
 
 ### Bayer Noise Reduction
 
@@ -138,14 +177,6 @@ Below parameters are present each ISP pipeline module they effect the functional
 | gamma_lut_12              | The look up table for gamma curve for 12 bit Image |
 | gamma_lut_14              | The look up table for gamma curve for 14 bit Image |
 
-### 3A - Auto Exposure
-| auto_exposure      | Details                                                                                      
-|--------------------|----------------------------------------------------------------------------------------------|
-| is_enable           | When enabled applies the 3A- Auto Exposure algorithm                                         |
-| stats_window_offset | Specifies the crop dimensions to obtain a stats calculation window <br> - Should be an array of elements `[Up, Down, Left, Right]` <br> - Should be a multiple of 4 |                                                            |  
-| center_illuminance | The value of center illuminance for skewness calculation ranges from 0 to 255. Default is 90 |   
-| histogram_skewness | The range of histogram skewness should be between 0 and 1 for correct exposure calculation   |  
-
 ### Color Space Conversion (CSC)
 
 | color_space_conversion | Details                                                                             |  
@@ -159,6 +190,18 @@ Below parameters are present each ISP pipeline module they effect the functional
 | is_enable          | When enabled applies the 2D noise reduction       |  
 | window_size        | Search window size for applying non-local means   |    
 | wts                | Smoothening strength parameter                    |
+
+### Saturation Enhancement
+
+The HDR-ISP saturation block (RTL `axis_sat`), on the 8-bit YUV after 2D noise reduction. Y passes through; each chroma sample becomes `clip(((C - 128) * SAT_GAIN) >>> 8 + 128)`, where `SAT_GAIN` is the 12-bit Q4.8 register and 128 the chroma pedestal of the colour space conversion.
+
+| saturation_enhancement | Details                                           |
+|--------------------|---------------------------------------------------|
+| is_enable          | When enabled applies the saturation enhancement   |
+| algorithm          | `global` (the RTL algorithm). `hue_rolloff` exists only in the algorithm-design model and is refused here |
+| saturation_gain    | Chroma gain, truncated to the Q4.8 register (1/256 steps). Allowed 0 to 15.12: above it the RTL's 12-bit add stage wraps |
+| is_save            | Saves the module output |
+
 ### RGB Conversion
 
 | rgb_conversion | Details                                           | 

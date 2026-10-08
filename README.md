@@ -57,17 +57,19 @@ The table below provides a feature list of the model. The version `1.0` of the m
 | Dead Pixel Correction                         | Modified  [Yongji's et al, Dynamic Defective Pixel Correction for Image Sensor](https://ieeexplore.ieee.org/document/9194921)|
 | Black Level Correction                        | Calibration / sensor dependent <br> - Applies parameters from the config file tunable using the tuning tool|
 | Optical Electronic Transfer Function (OECF)   | Calibration / sensor dependent <br> - Implements a LUT from config |
-| Digital Gain                                  | Gains from config file <br>- In auto mode AE feedback is incorporated for digital gain selection|
+| Digital Gain                                  | Gains from config file <br>- In auto mode the AE control chooses the gain for the next frame|
+| Auto Exposure Statistics                      | HDR-ISP AE statistics block (RTL `axis_ae_stat`) <br> - 3x3 grid: green-only shadow / highlight counts and green sum, all-channel clip counts <br> - Bit-exact: 32-bit counters, 32-bit saturating sum |
+| Auto Exposure                                 | HDR-ISP AE control law (EV law) as an RTL block <br> - Integer clip-corrected centre-weighted metering, Q8 EV error with highlight / clip budgets <br> - Once per frame, one shared divider; drives the digital gain |
 | Bayer Noise Reduction                         | [Green Channel Guiding Denoising by Tan et al](https://www.researchgate.net/publication/261753644_Green_Channel_Guiding_Denoising_on_Bayer_Image) <br>  - Implements Chroma and Spatial filters through LUTs |
 | Auto White Balance                            | Enhanced [Gray World](https://www.sciencedirect.com/science/article/abs/pii/0016003280900587) <br>- AWB stats calculations within an optimal threshold    |
 | White Balance                                 | WB gains multiplication <br> - Parameters from the config file tunable using the tuning tool |
 | Demosaic                         | [Malwar He Cutler’s](https://www.ipol.im/pub/art/2011/g_mhcd/article.pdf ) demosaicing algorithm  |
 | Color Correction Matrix                       | Calibration / sensor dependent <br> - 3x3 CCM from the config file tunable using the tuning tool|
 | Gamma Correction             |Implements a LUT from config |
-| Auto Exposure                                 | [Auto Exposure](https://www.atlantis-press.com/article/25875811.pdf) <br> - AE stats calculations based on skewness |
 | Color Space Conversion                        | YCbCr digital <br> - BT 601 <br> - Bt 709  <br>   |YCbCr digital <br> - BT 601 <br> - Bt 709  <br> |
 | Sharpening                                    | Simple unsharp masking with strength control      |
 | Noise Reduction                               | [Non-local means filter](https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf) <br> - Implements intensity level difference  through a LUT|
+| Saturation Enhancement                        | HDR-ISP saturation block (RTL `axis_sat`) <br> - Chroma scaled about the 128 pedestal by a 12-bit Q4.8 gain, bit-exact datapath |
 | RGB Conversion                               | Converts YCbCr digital image to RGB|
 | Invalid Region Crop    | Crops image to a fixed size|
 |On Screen Display       | Adds 10x Logo on top left corner             | 
