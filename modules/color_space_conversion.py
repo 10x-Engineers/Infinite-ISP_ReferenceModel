@@ -48,7 +48,7 @@ class ColorSpaceConversion:
             # for BT.601/407
             # conversion metrix with 8bit integer co-efficients - m=8
             self.rgb2yuv_mat = np.array(
-                [[77, 150, 29], [-44, -87, 138], [131, -110, -21]]
+                [[77, 150, 29], [-43, -85, 128], [128, -107, -21]]
             )
 
         # make nx3 2d matrix of image
@@ -65,7 +65,9 @@ class ColorSpaceConversion:
         yuv_2d = np.where(yuv_2d >= 0, np.floor(yuv_2d + 0.5), np.ceil(yuv_2d - 0.5))
 
         # black-level/DC offset added to YUV values
-        yuv_2d[0, :] = 2 ** (self.bit_depth / 2) + yuv_2d[0, :]
+        # BT.601/407 is full-range, so Y gets no offset; only BT.709 is studio-range.
+        if self.conv_std == 1:
+            yuv_2d[0, :] = 2 ** (self.bit_depth / 2) + yuv_2d[0, :]
         yuv_2d[1, :] = 2 ** (self.bit_depth - 1) + yuv_2d[1, :]
         yuv_2d[2, :] = 2 ** (self.bit_depth - 1) + yuv_2d[2, :]
 
