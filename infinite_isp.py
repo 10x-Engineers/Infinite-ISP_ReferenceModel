@@ -32,6 +32,7 @@ from modules.on_screen_display import OnScreenDisplay as OSD
 from modules.scale import Scale
 from modules.crop import Crop
 from modules.auto_exposure import AutoExposure as AE
+from modules.ldci import LDCI
 
 
 class InfiniteISP:
@@ -78,6 +79,7 @@ class InfiniteISP:
         self.parm_gmc = c_yaml["gamma_correction"]
         self.parm_ae = c_yaml["auto_exposure"]
         self.parm_csc = c_yaml["color_space_conversion"]
+        self.parm_ldci = c_yaml["ldci"]
         self.parm_sha = c_yaml["sharpen"]
         self.parm_2dn = c_yaml["2d_noise_reduction"]
         self.parm_rgb = c_yaml["rgb_conversion"]
@@ -261,9 +263,20 @@ class InfiniteISP:
         csc_img = csc.execute()
 
         # =====================================================================
+        # Local Dynamic Contrast Improvement
+        ldci = LDCI(
+            csc_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_ldci,
+            self.save_output_obj,
+        )
+        ldci_img = ldci.execute()
+
+        # =====================================================================
         # Sharpening
         sha = SHARP(
-            csc_img,
+            ldci_img,
             self.platform,
             self.sensor_info,
             self.parm_sha,
@@ -437,8 +450,9 @@ class InfiniteISP:
         Execute Infinite-ISP with AWB gains and correct exposure
         """
 
-        # Maximum Iterations depend on total permissible gains
-        max_dg = len(self.parm_dga["gain_array"])
+        # Maximum Iterations depend on total permissible gains.
+        # Use the last valid gain index, as Digital Gain clamps to it
+        max_dg = len(self.parm_dga["gain_array"]) - 1
 
         # Run ISP-Pipeline
         self.run_pipeline(visualize_output=False)

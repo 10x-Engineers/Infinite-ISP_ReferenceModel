@@ -123,6 +123,12 @@ color_space_conversion:
   conv_standard: 2
   is_save: False
 
+ldci:
+  is_enable: False
+  clip_limit: 1
+  wind: 16
+  is_save: False
+
 2d_noise_reduction:
   is_enable: True
   window_size: 5
