@@ -430,7 +430,7 @@ class InfiniteISP:
         Update 3A Stats into WB and DG modules parameters
         """
         # Update 3A in c_yaml too because it is output config
-        if awb_on is True and self.parm_wbc["is_auto"] and self.parm_awb["is_enable"]:
+        if awb_on is True and self.parm_dga["is_auto"] and self.parm_awb["is_enable"]:
             self.parm_wbc["r_gain"] = self.c_yaml["white_balance"]["r_gain"] = float(
                 self.awb_gains[0]
             )
