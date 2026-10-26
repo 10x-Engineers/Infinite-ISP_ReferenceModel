@@ -45,13 +45,14 @@ class Crop:
         Output: cropped image
         """
 
-        if rows_to_crop != 0 and rows_to_crop % 4 == 0:
-            img = img[rows_to_crop // 2 : -rows_to_crop // 2, :]
-
-        if cols_to_crop != 0 and cols_to_crop % 4 == 0:
-            img = img[:, cols_to_crop // 2 : -cols_to_crop // 2]
-
-        if rows_to_crop % 4 != 0 or cols_to_crop % 4 != 0:
+        if (rows_to_crop != 0 or cols_to_crop != 0) and (
+            rows_to_crop % 4 == 0 and cols_to_crop % 4 == 0
+        ):
+            if rows_to_crop != 0:
+                img = img[rows_to_crop // 2 : -rows_to_crop // 2, :]
+            if cols_to_crop != 0:
+                img = img[:, cols_to_crop // 2 : -cols_to_crop // 2]
+        elif rows_to_crop != 0 or cols_to_crop != 0:
             print(
                 "   - Input/Output heights are not compatible. "
                 "Bayer pattern will be disturbed if cropped!\n"

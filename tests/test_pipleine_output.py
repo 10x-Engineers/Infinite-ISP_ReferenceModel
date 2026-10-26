@@ -76,6 +76,7 @@ def test_default_config_state():
     assert def_config["gamma_correction"] == rm_config["gamma_correction"]
     assert def_config["color_space_conversion"] == rm_config["color_space_conversion"]
     assert def_config["sharpen"] == rm_config["sharpen"]
+    assert def_config["ldci"] == rm_config["ldci"]
     assert def_config["2d_noise_reduction"] == rm_config["2d_noise_reduction"]
     assert def_config["saturation_enhancement"] == rm_config["saturation_enhancement"]
     assert def_config["rgb_conversion"] == rm_config["rgb_conversion"]

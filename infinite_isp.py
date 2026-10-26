@@ -34,6 +34,7 @@ from modules.invalid_region_crop import InvalidRegionCrop as IRC
 from modules.on_screen_display import OnScreenDisplay as OSD
 from modules.scale import Scale
 from modules.crop import Crop
+from modules.ldci import LDCI
 
 
 class InfiniteISP:
@@ -81,6 +82,7 @@ class InfiniteISP:
         self.parm_ccm = c_yaml["color_correction_matrix"]
         self.parm_gmc = c_yaml["gamma_correction"]
         self.parm_csc = c_yaml["color_space_conversion"]
+        self.parm_ldci = c_yaml["ldci"]
         self.parm_sha = c_yaml["sharpen"]
         self.parm_2dn = c_yaml["2d_noise_reduction"]
         self.parm_se = c_yaml["saturation_enhancement"]
@@ -290,9 +292,20 @@ class InfiniteISP:
         csc_img = csc.execute()
 
         # =====================================================================
+        # Local Dynamic Contrast Improvement
+        ldci = LDCI(
+            csc_img,
+            self.platform,
+            self.sensor_info,
+            self.parm_ldci,
+            self.save_output_obj,
+        )
+        ldci_img = ldci.execute()
+
+        # =====================================================================
         # Sharpening
         sha = SHARP(
-            csc_img,
+            ldci_img,
             self.platform,
             self.sensor_info,
             self.parm_sha,
@@ -462,7 +475,7 @@ class InfiniteISP:
         Update 3A Stats into WB and DG modules parameters
         """
         # Update 3A in c_yaml too because it is output config
-        if awb_on is True and self.parm_wbc["is_auto"] and self.parm_awb["is_enable"]:
+        if awb_on is True and self.parm_dga["is_auto"] and self.parm_awb["is_enable"]:
             self.parm_wbc["r_gain"] = self.c_yaml["white_balance"]["r_gain"] = float(
                 self.awb_gains[0]
             )

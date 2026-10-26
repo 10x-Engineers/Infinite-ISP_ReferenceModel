@@ -151,6 +151,12 @@ color_space_conversion:
   conv_standard: 2
   is_save: false
 
+ldci:
+  is_enable: false
+  clip_limit: 1
+  wind: 16
+  is_save: false
+
 sharpen:
   is_enable: true
   sharpen_sigma: 2
