@@ -63,7 +63,7 @@ digital_gain:
   is_save: false
 
 auto_exposure_stats:
-  # HDR-ISP AE statistics block (RTL axis_ae_stat), on the raw after digital gain
+  # AE statistics block, on the raw after digital gain
   is_enable: true
   is_debug: true
   # 3x3 grid: 4 column / 4 row boundaries in pixels, the last = frame width / height
@@ -75,7 +75,7 @@ auto_exposure_stats:
   is_save: false
 
 auto_exposure:
-  # 3A-AE: HDR-ISP firmware AE control law (ae_ctrl.c, EV law) choosing the digital
+  # 3A-AE: EV-law AE control firmware choosing the digital
   # gain (digital_gain.is_auto must be true).  EV values in Q8: 256 = 1 EV
   is_enable: true
   is_debug: true
@@ -161,7 +161,7 @@ sharpen:
   is_save: false
 
 saturation_enhancement:
-  # HDR-ISP saturation enhancement (RTL axis_sat), YUV after 2D noise reduction
+  # Saturation enhancement, YUV after 2D noise reduction
   is_enable: true
   algorithm: "global"      # the RTL algorithm (hue_rolloff: algorithm-design model only)
   saturation_gain: 1.5     # SAT_GAIN register: unsigned Q4.8, truncated to 1/256 steps

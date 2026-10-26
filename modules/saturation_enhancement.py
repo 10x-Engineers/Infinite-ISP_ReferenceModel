@@ -1,6 +1,6 @@
 """
 File: saturation_enhancement.py
-Description: Saturation enhancement in YUV (HDR-ISP axis_sat).  Runs after 2D noise
+Description: Saturation enhancement in YUV.  Runs after 2D noise
              reduction, before RGB conversion.  Y passes through; each chroma sample
              is scaled about the chroma pedestal:
 
@@ -27,7 +27,7 @@ Description: Saturation enhancement in YUV (HDR-ISP axis_sat).  Runs after 2D no
              Only the "global" algorithm has a fixed-point / RTL design.  The
              hue-selective "hue_rolloff" of the algorithm-design model has none yet.
 
-Code / Paper  Reference: HDR-ISP RTL axis/rtl/axis_sat.v (native hdr_isp_sat.v)
+Code / Paper  Reference: Saturation enhancement RTL block
 Author: 10xEngineers Pvt Ltd
 ------------------------------------------------------------
 """

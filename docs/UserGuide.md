@@ -88,7 +88,7 @@ Below parameters are present each ISP pipeline module they effect the functional
 
 ### 3A - Auto Exposure Statistics
 
-The HDR-ISP AE statistics block (RTL `axis_ae_stat`), on the raw after digital gain. Per cell of a 3x3 grid it counts green pixels below `shadow_threshold` and above `highlight_threshold`, sums the green pixel values (32-bit, saturating) and counts the pixels of every channel at 0 and at full scale (32-bit counters). Comparisons are strict.
+The AE statistics block, on the raw after digital gain. Per cell of a 3x3 grid it counts green pixels below `shadow_threshold` and above `highlight_threshold`, sums the green pixel values (32-bit, saturating) and counts the pixels of every channel at 0 and at full scale (32-bit counters). Comparisons are strict.
 
 | auto_exposure_stats  | Details |
 | -----------          |   ---   |
@@ -101,7 +101,7 @@ The HDR-ISP AE statistics block (RTL `axis_ae_stat`), on the raw after digital g
 
 ### 3A - Auto Exposure
 
-The HDR-ISP AE control law (`ae_ctrl.c`, EV law) as an RTL block, in integer arithmetic. It meters a clip-corrected, centre-weighted green mean from the statistics, computes the exposure error `log2(target_mean) - log2(mean)` in Q8 EV (256 = 1 EV), caps it when the highlight or clip fraction is over budget, never darkens a mostly dark frame, and makes a damped, slew-limited move inside a deadband with hysteresis. The move picks the nearest gain in `digital_gain.gain_array` for the next frame. A target between two gains settles on one of them (the smaller error, never a brighter gain that breaks the highlight / clip budget) instead of alternating, until the scene changes. In `render_3a` the pipeline re-runs until the gain holds.
+The EV-law AE control law as an RTL block, in integer arithmetic. It meters a clip-corrected, centre-weighted green mean from the statistics, computes the exposure error `log2(target_mean) - log2(mean)` in Q8 EV (256 = 1 EV), caps it when the highlight or clip fraction is over budget, never darkens a mostly dark frame, and makes a damped, slew-limited move inside a deadband with hysteresis. The move picks the nearest gain in `digital_gain.gain_array` for the next frame. A target between two gains settles on one of them (the smaller error, never a brighter gain that breaks the highlight / clip budget) instead of alternating, until the scene changes. In `render_3a` the pipeline re-runs until the gain holds.
 
 Hardware: the block runs once per frame, during vertical blanking, after the statistics block latches the frame's statistics; its gain applies from the next frame. It has one shared divider (at most 17 divisions per frame) and a Q8 log2 unit. The register widths and internal bit widths are listed in [modules/auto_exposure.py](../modules/auto_exposure.py). With the block enabled, `digital_gain.gain_array` is its gain table: at most 128 gains, each a multiple of 1/256 from 1/256 to 255.996.
 
@@ -193,7 +193,7 @@ Hardware: the block runs once per frame, during vertical blanking, after the sta
 
 ### Saturation Enhancement
 
-The HDR-ISP saturation block (RTL `axis_sat`), on the 8-bit YUV after 2D noise reduction. Y passes through; each chroma sample becomes `clip(((C - 128) * SAT_GAIN) >>> 8 + 128)`, where `SAT_GAIN` is the 12-bit Q4.8 register and 128 the chroma pedestal of the colour space conversion.
+The saturation enhancement block, on the 8-bit YUV after 2D noise reduction. Y passes through; each chroma sample becomes `clip(((C - 128) * SAT_GAIN) >>> 8 + 128)`, where `SAT_GAIN` is the 12-bit Q4.8 register and 128 the chroma pedestal of the colour space conversion.
 
 | saturation_enhancement | Details                                           |
 |--------------------|---------------------------------------------------|

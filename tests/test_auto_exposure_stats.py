@@ -1,7 +1,7 @@
 """
 File: test_auto_exposure_stats.py
 Description: Unit tests for the AE statistics block against a pixel-by-pixel model of
-             the RTL (axis_ae_stat): every pixel is binned by comparing its (row, col)
+             the RTL: every pixel is binned by comparing its (row, col)
              with the grid registers, green is decoded from the Bayer phase as the RTL
              does (sns_bayer XOR {row & 1, col & 1}: Gr / Gb), and the green sum is a
              per-pixel saturating add.

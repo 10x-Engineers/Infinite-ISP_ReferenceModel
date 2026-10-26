@@ -1,7 +1,7 @@
 """
 File: test_saturation_enhancement.py
-Description: Unit tests for the saturation block against the golden of HDR-ISP's own
-             RTL testbench (tb_axis_sat.sv):
+Description: Unit tests for the saturation block against the golden of the reference
+             RTL testbench:
                  chroma = clip( floor((c - offset) * gain / 256) + offset, 0, 2^BITS - 1 )
              for every 8-bit chroma value and SAT_GAIN register values across the clean
              range, plus the register quantisation and the refusals.
@@ -18,7 +18,7 @@ from modules import saturation_enhancement as se_mod  # pylint: disable=C0413
 
 
 def chroma_gold(chroma, gain, offset=128):
-    """tb_axis_sat.sv chroma_gold (integer, floor division)."""
+    """Reference testbench chroma_gold (integer, floor division)."""
     return min(max(((chroma - offset) * gain) // 256 + offset, 0), 255)
 
 

@@ -1,8 +1,8 @@
 """
 File: auto_exposure.py
-Description: 3A-AE control block - the HDR-ISP auto-exposure control law (ae_ctrl.c,
-             "EV law") as an RTL block driving Infinite-ISP's digital gain.  This file is
-             the bit-accurate specification of that block.
+Description: 3A-AE control block - an EV-law auto-exposure control law as an RTL block
+             driving Infinite-ISP's digital gain.  This file is the bit-accurate
+             specification of that block.
 
              Timing: the statistics block (auto_exposure_stats) latches frame N's 45
              values at the start of frame N+1; this block then runs once, as a
@@ -68,13 +68,12 @@ Description: 3A-AE control block - the HDR-ISP auto-exposure control law (ae_ctr
              shadow / highlight counts never exceed its greens, its clip counts never
              exceed its pixels.
 
-             The arithmetic is the firmware's exactly (mirrored in HDR-ISP
-             verify/ae_loop_sim.py) - where the hardware form differs, it is an exact
-             rewrite (the valid-green test is a multiply-compare) - generalised from the
-             firmware's fixed 10-bit, fixed-grid constants to this frame's bit depth
-             and grid.
+             The arithmetic mirrors a reference firmware model exactly - where the
+             hardware form differs, it is an exact rewrite (the valid-green test is a
+             multiply-compare) - generalised from the firmware's fixed 10-bit,
+             fixed-grid constants to this frame's bit depth and grid.
 
-Code / Paper  Reference: HDR-ISP firmware ae_ctrl.c (AE_CTRL_V2) / verify/ae_loop_sim.py
+Code / Paper  Reference: EV-law auto-exposure control firmware
 Author: 10xEngineers Pvt Ltd
 ------------------------------------------------------------
 """
@@ -321,7 +320,7 @@ class AutoExposure:
         the error having changed sign - possibly after dwelling at B for a few frames
         while the mean's IIR catches up.  That bracket is settled on the end with the
         smaller error (the darker end on a tie) - never on the brighter end if it
-        breaks the highlight or clip budget (HDR-ISP's default: protect highlights) -
+        breaks the highlight or clip budget (the default policy: protect highlights) -
         and held while the scene stays put: the RAW metered mean at the held gain
         within the deadband (the filtered error still drifts for frames after a move,
         so it cannot tell a scene change from the filter catching up).  The reference

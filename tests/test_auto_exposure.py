@@ -1,6 +1,6 @@
 """
 File: test_auto_exposure.py
-Description: Unit tests for the AE control (HDR-ISP firmware EV law): the Q8 log2,
+Description: Unit tests for the AE control (EV-law firmware): the Q8 log2,
              the per-cell pixel counts from the grid, hand-worked meter and decision
              cases, and the gain-ladder bracket on a synthetic video sequence.
              Run from the repo root:  python -m pytest tests/test_auto_exposure.py

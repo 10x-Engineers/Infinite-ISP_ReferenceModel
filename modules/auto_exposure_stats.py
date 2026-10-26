@@ -1,6 +1,6 @@
 """
 File: auto_exposure_stats.py
-Description: 3A - AE statistics block (HDR-ISP axis_ae_stat).  A statistics sink on
+Description: 3A - AE statistics block.  A statistics sink on
              the raw Bayer frame: over a 3x3 grid of cells it accumulates, per cell
                shadow_count     : green pixels with value <  shadow_threshold
                highlight_count  : green pixels with value >  highlight_threshold
@@ -26,10 +26,10 @@ Description: 3A - AE statistics block (HDR-ISP axis_ae_stat).  A statistics sink
 
              Where it runs: on the digital-gain output (linear, black-level
              corrected, before noise reduction).  Digital gain stands in for the
-             sensor exposure that the HDR-ISP firmware AE moves, so the statistics
+             sensor exposure that the firmware AE moves, so the statistics
              must see it.
 
-Code / Paper  Reference: HDR-ISP RTL axis/rtl/axis_ae_stat.v
+Code / Paper  Reference: AE statistics RTL block
 Author: 10xEngineers Pvt Ltd
 ------------------------------------------------------------
 """
