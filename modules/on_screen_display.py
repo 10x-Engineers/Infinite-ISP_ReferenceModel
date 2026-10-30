@@ -77,7 +77,7 @@ class OnScreenDisplay:
         Alpha blending is used to combine the logo and the image with transparency.
         """
         blended_pixel = [
-            (int(alpha * f + (255 - alpha) * b) >> 8)
+            ((alpha * int(f) + (255 - alpha) * int(b)) >> 8)
             for f, b in zip(foreground_pixel, background_pixel)
         ]
         return blended_pixel

@@ -14,7 +14,7 @@ If you want to contribute to the project, we recommend you see the repo issues f
 
 1.	Install Git and set up your GitHub account. 
 
-2.	Fork the infinite-isp repo and check [issues](https://github.com/10xEngineersTech/Infinite-ISP_ReferenceModel/issues) to get started.
+2.	Fork the infinite-isp repo and check [issues](https://github.com/10x-Engineers/Infinite-ISP_ReferenceModel/issues) to get started.
 3.	Create a feature branch from the `main` branch to make changes after choosing a task.
 4.	See the code guidelines to write your code. 
 5.	Run the test cases to ensure the implemented code runs fine on your local system. 
@@ -23,7 +23,7 @@ If you want to contribute to the project, we recommend you see the repo issues f
 
 ## Bug Report or Feature Request
 
-While contributing to our pipeline, we recommend investigating the repo [issues](https://github.com/10xEngineersTech/Infinite-ISP_ReferenceModel/issues) first. For this, you are welcome to open an issue on finding any kind of bug or to request a feature inclusion. Just be sure it doesn’t comply with any existing problems or pull requests before sending an issue or new feature request. 
+While contributing to our pipeline, we recommend investigating the repo [issues](https://github.com/10x-Engineers/Infinite-ISP_ReferenceModel/issues) first. For this, you are welcome to open an issue on finding any kind of bug or to request a feature inclusion. Just be sure it doesn’t comply with any existing problems or pull requests before sending an issue or new feature request. 
 
 While reporting a bug, ensure it includes all the relevant information, like code snippets, estimators, functions, exceptions, etc., so anyone can reproduce the bug. 
 
