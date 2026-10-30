@@ -189,9 +189,9 @@ def approx_sqrt(number, num_iterations=5):
     return sqrt.astype(np.uint64)
 
 
-def display_ae_statistics(ae_feedback, awb_gains):
+def display_ae_statistics(ae_result, awb_gains):
     """
-    Print AE Stats for current frame
+    Print 3A Stats for current frame (ae_result: the auto_exposure decision)
     """
     # Logs for AWB
     if awb_gains is None:
@@ -201,15 +201,23 @@ def display_ae_statistics(ae_feedback, awb_gains):
         print("   - 3A Stats    - AWB Bgain = ", awb_gains[1])
 
     # Logs for AE
-    if ae_feedback is None:
+    if ae_result is None:
         print("   - 3A Stats    - AE is Disable")
+        return
+    ev_err = ae_result["ev_err"] / 256.0
+    if ae_result["converged"]:
+        verdict = "Correct Exposure"
+    elif ev_err > 0:
+        verdict = "Underexposed"
     else:
-        if ae_feedback < 0:
-            print("   - 3A Stats    - AE Feedback = Underexposed")
-        elif ae_feedback > 0:
-            print("   - 3A Stats    - AE Feedback = Overexposed")
-        else:
-            print("   - 3A Stats    - AE Feedback = Correct Exposure")
+        verdict = "Overexposed"
+    print(f"   - 3A Stats    - AE Metered Mean = {ae_result['vm']} "
+          f"(target {ae_result['target_mean']})")
+    print(f"   - 3A Stats    - AE Exposure Error = {ev_err:+.2f} EV -> {verdict}")
+    if not ae_result["converged"] and not ae_result["moved"]:
+        print("   - 3A Stats    - AE Digital gain cannot get closer to the target "
+              "(end of gain_array or step too coarse)")
+    print(f"   - 3A Stats    - AE Digital Gain (next frame) = {ae_result['gain']}")
 
 
 def reconstruct_yuv_from_422_custom(yuv_422_custom, width, height):
@@ -393,8 +401,13 @@ class SaveOutput:
                 if "auto_white_balance" in module_name:
                     print(f"RGain = {output_array[0]}", file=txt_file)
                     print(f"BGain = {output_array[1]}", file=txt_file)
-                elif "auto_exposure" in module_name:
-                    pass
+                elif "auto_exposure_stats" in module_name:
+                    # one row per grid cell (index = row * 3 + col), as the RTL registers
+                    keys = list(output_array)
+                    print("cell " + " ".join(keys), file=txt_file)
+                    for cell in range(len(output_array[keys[0]])):
+                        values = " ".join(str(output_array[k][cell]) for k in keys)
+                        print(f"{cell} {values}", file=txt_file)
 
     def save_pipeline_output(self, img_name, output_img, config_file):
         """

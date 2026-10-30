@@ -29,7 +29,7 @@ In its current state, the model implements simple algorithm per module, with pla
 
 ![](docs/assets/infinite-isp-architecture.png)
 
-ISP pipeline for `InfiniteISP_ReferenceModel v1.0`
+ISP pipeline for `InfiniteISP_ReferenceModel v2.0.0`
 
 
 ## Contents
@@ -48,7 +48,7 @@ The primary objective of Infinite-ISP_ReferenceModel is to create a open source 
 
 # Features List
 
-The table below provides a feature list of the model. The version `1.0` of the model implements hardware-friendly and simple algorithms for each module.
+The table below provides a feature list of the model. The version `2.0.0` of the model implements hardware-friendly and simple algorithms for each module.
 
 
 | Modules        | Infinite-ISP_ReferenceModel  | 
@@ -57,17 +57,20 @@ The table below provides a feature list of the model. The version `1.0` of the m
 | Dead Pixel Correction                         | Modified  [Yongji's et al, Dynamic Defective Pixel Correction for Image Sensor](https://ieeexplore.ieee.org/document/9194921)|
 | Black Level Correction                        | Calibration / sensor dependent <br> - Applies parameters from the config file tunable using the tuning tool|
 | Optical Electronic Transfer Function (OECF)   | Calibration / sensor dependent <br> - Implements a LUT from config |
-| Digital Gain                                  | Gains from config file <br>- In auto mode AE feedback is incorporated for digital gain selection|
+| Digital Gain                                  | Gains from config file <br>- In auto mode the AE control chooses the gain for the next frame|
+| Auto Exposure Statistics                      | AE statistics block <br> - 3x3 grid: green-only shadow / highlight counts and green sum, all-channel clip counts <br> - Bit-exact: 32-bit counters, 32-bit saturating sum |
+| Auto Exposure                                 | EV-law AE control as an RTL block <br> - Integer clip-corrected centre-weighted metering, Q8 EV error with highlight / clip budgets <br> - Once per frame, one shared divider; drives the digital gain |
 | Bayer Noise Reduction                         | [Green Channel Guiding Denoising by Tan et al](https://www.researchgate.net/publication/261753644_Green_Channel_Guiding_Denoising_on_Bayer_Image) <br>  - Implements Chroma and Spatial filters through LUTs |
 | Auto White Balance                            | Enhanced [Gray World](https://www.sciencedirect.com/science/article/abs/pii/0016003280900587) <br>- AWB stats calculations within an optimal threshold    |
 | White Balance                                 | WB gains multiplication <br> - Parameters from the config file tunable using the tuning tool |
 | Demosaic                         | [Malwar He Cutler’s](https://www.ipol.im/pub/art/2011/g_mhcd/article.pdf ) demosaicing algorithm  |
 | Color Correction Matrix                       | Calibration / sensor dependent <br> - 3x3 CCM from the config file tunable using the tuning tool|
 | Gamma Correction             |Implements a LUT from config |
-| Auto Exposure                                 | [Auto Exposure](https://www.atlantis-press.com/article/25875811.pdf) <br> - AE stats calculations based on skewness |
 | Color Space Conversion                        | YCbCr digital <br> - BT 601 <br> - Bt 709  <br>   |YCbCr digital <br> - BT 601 <br> - Bt 709  <br> |
+| Local Dynamic Contrast Improvement (LDCI)     | Modified [contrast limited adaptive histogram equalization](https://arxiv.org/ftp/arxiv/papers/2108/2108.12818.pdf) <br> - Per-tile histogram equalization with bilinear blending at tile boundaries; LUT via reciprocal-multiply |
 | Sharpening                                    | Simple unsharp masking with strength control      |
 | Noise Reduction                               | [Non-local means filter](https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf) <br> - Implements intensity level difference  through a LUT|
+| Saturation Enhancement                        | Saturation enhancement block <br> - Chroma scaled about the 128 pedestal by a 12-bit Q4.8 gain, bit-exact datapath |
 | RGB Conversion                               | Converts YCbCr digital image to RGB|
 | Invalid Region Crop    | Crops image to a fixed size|
 |On Screen Display       | Adds 10x Logo on top left corner             | 
@@ -87,7 +90,7 @@ The project assumes pip package manager as a pre-requisite.
 Follow the following steps to run the pipeline
 1.  Clone the repo using 
 ```shell
-git clone https://github.com/10xEngineersTech/Infinite-ISP_ReferenceModel
+git clone https://github.com/10x-Engineers/Infinite-ISP_ReferenceModel
 ```
 
 2.  Install all the requirements from the requirements file by running
@@ -112,14 +115,14 @@ RAW_DATA = './in_frames/normal/data'
 
 ## How to Run on Pipeline on Multiple Images/Dataset
 
-There are two scripts that run Infinite-ISP on multiple images:
+The script [isp_pipeline_multiple_images.py](isp_pipeline_multiple_images.py) runs Infinite-ISP on multiple images in two modes:
 
 
-1. [isp_pipeline_dataset.py](isp_pipeline_dataset.py) 
+1. **Dataset mode**
     <br >Execute multiple images. Raw image should have its own config file with name `<filename>-configs.yml` where `<filename>` is raw filename otherwise the default configuration file [configs.yml](config/configs.yml) is used.
 
 
-2. [video_processing.py](video_processing.py) 
+2. **Video mode**
    <br> Each image in the dataset is considered as video frame in sequence. All images use the same configuration parameters from [configs.yml](config/configs.yml) and 3A Stats calculated on a frame are applied to the next frame.
 
 After cloning the repository and installing all the dependencies follow the following steps:
@@ -137,13 +140,13 @@ git submodule update --init --recursive
 ``` 
 
 
-4. After adding git repository as a submodule update `DATASET_PATH` variable in [isp_pipeline_dataset.py](isp_pipeline_dataset.py) to `./in_frames/normal/<dataset_name>`. Git does not allow to import a repository’s subfolder using a submodule. You can only add an entire repository and then access the folder. If you want to use images from a subfolder of a submodule modify the `DATASET_PATH` variable in [isp_pipeline_dataset.py](isp_pipeline_dataset.py)  or [video_processing.py](video_processing.py)  accordingly.
+4. After adding git repository as a submodule update `DATASET_PATH` variable in [isp_pipeline_multiple_images.py](isp_pipeline_multiple_images.py) to `./in_frames/normal/<dataset_name>`. Git does not allow to import a repository’s subfolder using a submodule. You can only add an entire repository and then access the folder. If you want to use images from a subfolder of a submodule modify the `DATASET_PATH` variable in [isp_pipeline_multiple_images.py](isp_pipeline_multiple_images.py) accordingly.
 
 ```python
 DATASET_PATH = './in_frames/normal/<dataset_name>'
 ```
 
-5. Run `isp_pipeline_dataset.py` or `video_processing.py`
+5. Run `isp_pipeline_multiple_images.py`
 6. The processed images are saved in [out_frames](out_frames/) folder.
 
 ## Contributing
@@ -165,11 +168,11 @@ A comparison of the above results based on PSNR and SSIM image quality metrics
 
 | Images    | PSNR  | SSIM  |
 |-----------|-------|-------|
-| Indoor1   |22.5788     |0.8923
-|Outdoor1   |19.1544     |0.9048
-|Outdoor2   |18.8681     |0.8071
-|Outdoor3   |17.2825     |0.7304
-|Outdoor4   |19.9814     |0.8198
+| Indoor1   |22.3860     |0.9486
+|Outdoor1   |17.4022     |0.8712
+|Outdoor2   |18.4249     |0.8063
+|Outdoor3   |16.4199     |0.7191
+|Outdoor4   |23.2950     |0.9456
 
 ## User Guide
 
